@@ -1,0 +1,18 @@
+{
+  "name": "yts-streaming",
+  "version": "1.0.0",
+  "description": "YTS Movie Streaming",
+  "main": "main.js",
+  "scripts": {
+    "run": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bipin Maharjan",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^8.3.3"
+  },
+  "dependencies": {
+    "electron-window-state": "^5.0.3"
+  }
+}
