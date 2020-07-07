@@ -5,8 +5,8 @@ const windowStateKeeper = require('electron-window-state');
 // Create a new BrowserWindow when `app` is ready
 function createWindow() {
     let state = windowStateKeeper({
-        defaultWidth: 500,
-        defaultHeight: 650,
+        defaultWidth: 800,
+        defaultHeight: 800,
     });
 
     mainWindow = new BrowserWindow({
