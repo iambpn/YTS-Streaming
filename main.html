@@ -8,10 +8,137 @@
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'">
 
     <link rel="stylesheet" href="./Assets/bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="./Assets/css/main.css">
 
     <title>YTS-Streaming</title>
 </head>
 <body>
+
+<div class="border-bottom border-secondary">
+    <div class="container">
+        <div class="m-3">
+            <nav class="navbar navbar-dark bg-dark justify-content-center border-0">
+                <img src="./Assets/images/logo-YTS.svg" alt="Logo" class="d-inline-block align-top">
+            </nav>
+        </div>
+    </div>
+</div>
+<div class="border-bottom border-secondary">
+    <div class="container">
+        <div class="row justify-content-center mt-4">
+            <div class="col-8 form-group">
+                <div class="row no-gutters">
+                    <div class="col-9 col-lg-10">
+                        <input type="text" id="search_field" class="form-control rounded p-2" placeholder="Search Movies">
+                    </div>
+                    <div class="col-3 col-lg-2 pl-2">
+                        <input type="button" value="Search" id="search_button" class="form-control btn-success">
+                    </div>
+                </div>
+            </div>
+            <div class="w-100"></div>
+            <div class="col-12 mt-3">
+                <div class="row justify-content-center form-group">
+                    <div class="col-2">
+                        <label for="quality">Quality:</label>
+                        <select class="form-control pl-1" id="quality">
+                            <option value="all" selected="selected">All</option>
+                            <option value="720p">720p</option>
+                            <option value="1080p">1080p</option>
+                            <option value="2160p">2160p</option>
+                            <option value="3D">3D</option>
+                        </select>
+                    </div>
+                    <div class="col-2">
+                        <label for="genre">Genre:</label>
+                        <select class="form-control pl-1" id="genre">
+                            <option value="all" selected="selected">All</option>
+                            <option value="action">Action</option>
+                            <option value="adventure">Adventure</option>
+                            <option value="animation">Animation</option>
+                            <option value="biography">Biography</option>
+                            <option value="comedy">Comedy</option>
+                            <option value="crime">Crime</option>
+                            <option value="documentary">Documentary</option>
+                            <option value="drama">Drama</option>
+                            <option value="family">Family</option>
+                            <option value="fantasy">Fantasy</option>
+                            <option value="film-noir">Film-Noir</option>
+                            <option value="game-show">Game-Show</option>
+                            <option value="history">History</option>
+                            <option value="horror">Horror</option>
+                            <option value="music">Music</option>
+                            <option value="musical">Musical</option>
+                            <option value="mystery">Mystery</option>
+                            <option value="news">News</option>
+                            <option value="reality-tv">Reality-TV</option>
+                            <option value="romance">Romance</option>
+                            <option value="sci-fi">Sci-Fi</option>
+                            <option value="sport">Sport</option>
+                            <option value="talk-show">Talk-Show</option>
+                            <option value="thriller">Thriller</option>
+                            <option value="war">War</option>
+                            <option value="western">Western</option>
+                        </select>
+                    </div>
+                    <div class="col-2">
+                        <label for="rating">Rating:</label>
+                        <select class="form-control pl-1" id="rating">
+                            <option value="0" selected="selected">All</option>
+                            <option value="9">9+</option>
+                            <option value="8">8+</option>
+                            <option value="7">7+</option>
+                            <option value="6">6+</option>
+                            <option value="5">5+</option>
+                            <option value="4">4+</option>
+                            <option value="3">3+</option>
+                            <option value="2">2+</option>
+                            <option value="1">1+</option>
+                        </select>
+                    </div>
+                    <div class="col-2">
+                        <label for="order_by">Order By:</label>
+                        <select class="form-control pl-1" id="order_by">
+                            <option value="latest" selected="selected">Latest</option>
+                            <option value="oldest">Oldest</option>
+                            <option value="featured">Featured</option>
+                            <option value="seeds">Seeds</option>
+                            <option value="peers">Peers</option>
+                            <option value="year">Year</option>
+                            <option value="rating">Rating</option>
+                            <option value="likes">Likes</option>
+                            <option value="alphabetical">Alphabetical</option>
+                            <option value="downloads">Downloads</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+    <div class="mt-3">
+        <h5 class="text-center" id="movies_list_title"></h5>
+    </div>
+    <div class="row no-gutters">
+        <div class="col">
+        </div>
+        <div class="col-2 mr-3">
+            <select id="page_selector" class="custom-select d-none">
+            </select>
+        </div>
+    </div>
+    <div class="container-lg mt-4" style="min-height: 400px;">
+        <div class="row justify-content-center" id="list_movies">
+
+        </div>
+    </div>
+</div>
+
+<div>
+    <h6 class="m-0 pl-1"><a href="#" class="text-dark">Content from - YTS API V2</a></h6>
+</div>
+
 </body>
 </html>
 
