@@ -1,4 +1,5 @@
 // java script for main.html
+const {remote,ipcRenderer} = require("electron");
 
 let movies_list_title = document.getElementById("movies_list_title");
 let list_movies = document.getElementById("list_movies");
@@ -10,7 +11,16 @@ let rating = document.getElementById("rating");
 let genre = document.getElementById("genre");
 let order_by = document.getElementById("order_by");
 
-let url = new URL("https://yts.mx/api/v2/list_movies.json");
+let url;
+
+if(remote.getGlobal("url")){
+    url = new URL(remote.getGlobal("url"));
+    setParameters(url);
+}
+else{
+    url = new URL("https://yts.mx/api/v2/list_movies.json");
+}
+
 
 search_field.addEventListener("keyup",(e)=>{
     if(e.key === "Enter"){
@@ -62,8 +72,35 @@ page_selector.addEventListener("change",()=>{
 
 getData(url);
 
+function setParameters(url){
+    if(url.searchParams.get("query_term")){
+        search_field.value = url.searchParams.get("query_term");
+    }
+
+    if(url.searchParams.get("quality")){
+        quality.value = url.searchParams.get("quality");
+    }
+
+    if(url.searchParams.get("genre")){
+        genre.value =url.searchParams.get("genre");
+    }
+
+    if(url.searchParams.get("minimum_rating")){
+        rating.value = url.searchParams.get("minimum_rating");
+    }
+
+    if(url.searchParams.get("sort_by")){
+        order_by.value = url.searchParams.get("sort_by");
+    }
+
+    if(url.searchParams.get("page")){
+        page_selector.value = url.searchParams.get("page");
+    }
+}
+
 function getData(url){
     list_movies.innerHTML=`<img src="./Assets/images/preloader.gif" alt="preloading" class="img-fluid" width="400" height="400">`;
+    ipcRenderer.send("saveUrl",url.href);
     fetch(url)
         .then(res=>{
             res.json()
@@ -113,7 +150,7 @@ function showMovies(movies) {
     for (let movie of movies) {
         movie_card = `<div class="col-3 mb-4">
     <div style="width: fit-content;" class="d-inline-block">
-        <a href="#" class="movie_link" data-id="${movie.id}">
+        <a href="./src/movieDetails.html?id=${movie.id}" class="movie_link">
             <div class="card" style="border: 5px solid white;">
                 <img class="img-fluid movie_image"
                      src="${movie.medium_cover_image}"

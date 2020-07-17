@@ -1,6 +1,12 @@
 // Modules
-const {app, BrowserWindow} = require('electron');
+const {app, BrowserWindow, ipcMain} = require('electron');
 const windowStateKeeper = require('electron-window-state');
+
+let mainWindow;
+
+ipcMain.on("saveUrl",(e,args)=>{
+    global.url = args;
+})
 
 // Create a new BrowserWindow when `app` is ready
 function createWindow() {
@@ -18,6 +24,8 @@ function createWindow() {
         minHeight: 600,
         webPreferences: {nodeIntegration: true}
     });
+
+    mainWindow.setBackgroundColor("#211e1e");
 
     //manage new window state
     state.manage(mainWindow);
