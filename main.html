@@ -41,7 +41,7 @@
 <div class="modal fade" id="staticBackdrop" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog"
      aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-dark">
+        <div class="modal-content border-secondary">
             <div class="modal-header">
                 <h5 class="modal-title text-center" id="staticBackdropLabel">YST Settings</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -49,15 +49,28 @@
                 </button>
             </div>
             <div class="modal-body">
-                <div class="form-group row justify-content-center mb-0">
+                <div class="form-group row justify-content-center mb-3 border-bottom border-secondary">
                     <label for="max_connection" class="col-5 col-form-label text-left">Max Connection on Torrent</label>
                     <div class="col-4 mb-2">
                         <input type="number" class="form-control" id="max_connection" placeholder="default = 55">
                     </div>
                     <div class="w-100"></div>
                 </div>
+                <div class="row mb-4">
+                    <div class="col-12 text-center">
+                        <button class="btn mr-4" style="background: #2A9FD6; color: white;" onclick="checkUpdate()">Check for Update</button>
+                        <button class="btn btn-secondary" onclick="viewProject()">View on Github</button>
+                    </div>
+                    <div class="w-100"></div>
+                </div>
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <span style="font-size: 17px;" class="mr-3 text-white">Special thanks to:</span>
+                        <button class="btn btn-outline-danger" style="font-size: 16px;" onclick="openWebTorrent()">Web Torrent</button>
+                    </div>
+                </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer border-secondary">
                 <button type="button" id="close_modal" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" onclick="updateYTSSettings(event)">Save</button>
             </div>

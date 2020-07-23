@@ -113,6 +113,9 @@ function descriptionAndTrailer(movie) {
             </a>
         </div>
     </div>
+</div>
+<div>
+    <h6 class="m-0 pl-1"><a href="#" class="text-dark">Content from - YTS API V2</a></h6>
 </div>`
     details_content.innerHTML += content;
 }

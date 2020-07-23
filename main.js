@@ -190,7 +190,7 @@ function createWindow() {
     mainWindow.loadFile('main.html')
 
     // Open DevTools - Remove for PRODUCTION!
-    mainWindow.webContents.openDevTools()
+    // mainWindow.webContents.openDevTools()
 
     // Listen for window being closed
     mainWindow.on('closed', () => {
@@ -241,7 +241,7 @@ function createMoviePlayerWindow(title) {
     moviePlayerWindow.loadURL('http://127.0.0.1:8000/streaming');
 
     // Open DevTools - Remove for PRODUCTION!
-    moviePlayerWindow.webContents.openDevTools()
+    // moviePlayerWindow.webContents.openDevTools()
 
     // Listen for window being closed
     moviePlayerWindow.on('closed', () => {

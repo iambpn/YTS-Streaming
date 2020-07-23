@@ -17,57 +17,72 @@
     <title>YTS-Streaming</title>
 </head>
 <body>
-    <div class="border-bottom border-secondary">
-        <div class="container">
-            <div class="m-3">
-                <div class="float-left mt-2">
-                    <span class="btn btn-outline-success" onclick="goBack()"> &larr; Back </span>
-                </div>
-                <nav class="navbar navbar-dark bg-dark justify-content-center border-0">
-                    <img src="../Assets/images/logo-YTS.svg" alt="Logo" class="d-inline-block align-top">
-                </nav>
-                <div class="position-absolute" style="top:27px; right:150px;">
-                    <a href="#" class="text-dark" data-toggle="modal" data-target="#staticBackdrop" onclick="loadSettings()">
-                        <svg width="2em" height="2em" viewBox="0 0 16 16" class="bi bi-gear-fill" fill="currentColor"
-                             xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                  d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 0 0-5.86 2.929 2.929 0 0 0 0 5.858z"/>
-                        </svg>
-                    </a>
-                </div>
+<div class="border-bottom border-secondary">
+    <div class="container">
+        <div class="m-3">
+            <div class="float-left mt-2">
+                <span class="btn btn-outline-success" onclick="goBack()"> &larr; Back </span>
+            </div>
+            <nav class="navbar navbar-dark bg-dark justify-content-center border-0">
+                <img src="../Assets/images/logo-YTS.svg" alt="Logo" class="d-inline-block align-top">
+            </nav>
+            <div class="position-absolute" style="top:27px; right:150px;">
+                <a href="#" class="text-dark" data-toggle="modal" data-target="#staticBackdrop"
+                   onclick="loadSettings()">
+                    <svg width="2em" height="2em" viewBox="0 0 16 16" class="bi bi-gear-fill" fill="currentColor"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                              d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 0 0-5.86 2.929 2.929 0 0 0 0 5.858z"/>
+                    </svg>
+                </a>
             </div>
         </div>
     </div>
+</div>
 
-    <div class="modal fade" id="staticBackdrop" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-dark">
-                <div class="modal-header">
-                    <h5 class="modal-title text-center" id="staticBackdropLabel">YST Settings</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+<div class="modal fade" id="staticBackdrop" data-backdrop="static" data-keyboard="false" tabindex="-1" role="dialog"
+     aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-secondary">
+            <div class="modal-header">
+                <h5 class="modal-title text-center" id="staticBackdropLabel">YST Settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group row justify-content-center mb-3 border-bottom border-secondary">
+                    <label for="max_connection" class="col-5 col-form-label text-left">Max Connection on Torrent</label>
+                    <div class="col-4 mb-2">
+                        <input type="number" class="form-control" id="max_connection" placeholder="default = 55">
+                    </div>
+                    <div class="w-100"></div>
                 </div>
-                <div class="modal-body">
-                    <div class="form-group row justify-content-center mb-0">
-                        <label for="max_connection" class="col-5 col-form-label text-left">Max Connection on Torrent</label>
-                        <div class="col-4 mb-2">
-                            <input type="number" class="form-control" id="max_connection" placeholder="default = 55">
-                        </div>
-                        <div class="w-100"></div>
+                <div class="row mb-4">
+                    <div class="col-12 text-center">
+                        <button class="btn mr-4" style="background: #2A9FD6; color: white;" onclick="checkUpdate()">Check for Update</button>
+                        <button class="btn btn-secondary" onclick="viewProject()">View on Github</button>
+                    </div>
+                    <div class="w-100"></div>
+                </div>
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <span style="font-size: 17px;" class="mr-3 text-white">Special thanks to:</span>
+                        <button class="btn btn-outline-danger" style="font-size: 16px;" onclick="openWebTorrent()">Web Torrent</button>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" id="close_modal" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="updateYTSSettings(event)">Save</button>
-                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" id="close_modal" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="updateYTSSettings(event)">Save</button>
             </div>
         </div>
     </div>
+</div>
 
-    <div id="background_content">
+<div id="background_content">
 
-    </div>
+</div>
 </body>
 </html>
 <script>
