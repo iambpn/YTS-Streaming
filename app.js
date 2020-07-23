@@ -21,6 +21,7 @@ else{
     url = new URL("https://yts.mx/api/v2/list_movies.json");
 }
 
+getData(url);
 
 search_field.addEventListener("keyup",(e)=>{
     if(e.key === "Enter"){
@@ -69,8 +70,6 @@ page_selector.addEventListener("change",()=>{
     url.searchParams.set("page",page_selector.value);
     getData(url)
 })
-
-getData(url);
 
 function setParameters(url){
     if(url.searchParams.get("query_term")){
