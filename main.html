@@ -26,7 +26,7 @@
             </nav>
             <div class="position-absolute" style="top:27px; right:150px;">
                 <a href="#" class="text-dark" data-toggle="modal" data-target="#staticBackdrop"
-                   onclick="loadSettings()">
+                   onclick="loadSettings()" title="Settings">
                     <svg width="2em" height="2em" viewBox="0 0 16 16" class="bi bi-gear-fill" fill="currentColor"
                          xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd"
@@ -58,15 +58,20 @@
                 </div>
                 <div class="row mb-4">
                     <div class="col-12 text-center">
-                        <button class="btn mr-4" style="background: #2A9FD6; color: white;" onclick="checkUpdate()">Check for Update</button>
-                        <button class="btn btn-secondary" onclick="viewProject()">View on Github</button>
+                        <button class="btn btn-primary mr-4" onclick="checkUpdate()">Check for Update</button>
+                        <button class="btn btn-secondary mr-4" onclick="viewProject()" title="View Project on Github">
+                            View on Github
+                        </button>
+                        <button class="btn btn-secondary" id="clear_cache">Clear Cache</button>
                     </div>
                     <div class="w-100"></div>
                 </div>
                 <div class="row">
                     <div class="col-12 text-center">
                         <span style="font-size: 17px;" class="mr-3 text-white">Special thanks to:</span>
-                        <button class="btn btn-outline-danger" style="font-size: 16px;" onclick="openWebTorrent()">Web Torrent</button>
+                        <button class="btn btn-outline-danger" style="font-size: 16px;" onclick="openWebTorrent()">Web
+                            Torrent
+                        </button>
                     </div>
                 </div>
             </div>
@@ -192,7 +197,9 @@
 </div>
 
 <div>
-    <h6 class="m-0 pl-1"><a href="#" class="text-dark">Content from - YTS API V2</a></h6>
+    <h6 class="m-0 pl-1 d-inline-block"><a href="#" class="text-dark">Content from - YTS API V2</a></h6>
+    <h6 class="m-0 p-1 float-right text-dark">Try cleaning the cache after watching movie by going to Settings > Clear
+        Cache.</h6>
 </div>
 
 </body>

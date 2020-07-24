@@ -151,8 +151,8 @@ function stopServerAndDownloading() {
         client.destroy(() => {
             client = null
         });
-
-        fs.rmdir(file_path, {recursive: true},()=>{})
+        // delete the file after closing the movie player
+        // fs.rmdir(file_path, {recursive: true},()=>{})
     } else {
         //error
         dialog.showErrorBox("Movie player not initialized", "Movie player is not initialized. Please restart the app and try again.");

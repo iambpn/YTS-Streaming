@@ -115,7 +115,8 @@ function descriptionAndTrailer(movie) {
     </div>
 </div>
 <div>
-    <h6 class="m-0 pl-1"><a href="#" class="text-dark">Content from - YTS API V2</a></h6>
+    <h6 class="m-0 pl-1 d-inline-block"><a href="#" class="text-dark">Content from - YTS API V2</a></h6>
+    <h6 class="m-0 p-1 float-right text-dark">Try cleaning the cache after watching movie by going to Settings > Clear Cache.</h6>
 </div>`
     details_content.innerHTML += content;
 }
