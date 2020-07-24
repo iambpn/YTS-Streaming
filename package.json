@@ -20,7 +20,7 @@
     "Torrent-Streaing"
   ],
   "devDependencies": {
-    "electron": "^8.3.3"
+    "electron": "^9.1.1"
   },
   "dependencies": {
     "electron-window-state": "^5.0.3",
