@@ -1,6 +1,6 @@
 ;!macro customInstall
 ;	this will be run after completing install
-;	CreateShortCut "$INSTDIR\ReadIt!.lnk" "$INSTDIR\ReadIt!.exe" "" "" "" SW_SHOWNORMAL "CONTROL|SHIFT|`" ""
+;	CreateShortCut "$INSTDIR\appname.lnk" "$INSTDIR\apname.exe" "" "" "" SW_SHOWNORMAL "CONTROL|SHIFT|`" ""
 ;!macroend
 
 ;to remove install dir after uninstall
