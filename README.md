@@ -21,3 +21,6 @@
 - [Link to Electron](https://www.electronjs.org/)
 - [Link to Electron-Builder](https://github.com/electron-userland/electron-builder)
 - Check package.json for more dependency
+
+
+*This is developed by me only so the apps quality and code quality and may not be that good*
