@@ -2,6 +2,8 @@
  YTS movie streaming is an electron app in windows platform. Through YTS-Streaming you can stream any movie available YTS movie.
  YTS-Streaming uses the content from the official YST API v2. The app is simple to use with a minimalistic design. It is more or less like the original YST website with the ability to play the movie within the app.
  
+ ### Download App > [Link to Releases](https://github.com/mbpn1/YTS-Streaming/releases) Download latest release
+ 
  ### Features
  - YTS Website in windows app
  - Torrent streaming with in-app
