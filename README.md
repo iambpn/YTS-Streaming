@@ -18,4 +18,6 @@
 ## links to dependency
 - [Link to WebTorrent.io](http://webtorrent.io)
 - [Link to plyr player](https://plyr.io/)
+- [Link to Electron](https://www.electronjs.org/)
+- [Link to Electron-Builder](https://github.com/electron-userland/electron-builder)
 - Check package.json for more dependency
