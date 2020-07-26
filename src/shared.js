@@ -44,6 +44,8 @@ window.checkUpdate = ()=>{
     shell.openExternal('https://github.com/mbpn1/YTS-Streaming/releases/');
 };
 
+// app version
+document.getElementById("version").innerHTML = require("../package.json").version;
 //clear cache
 let clear_cache = document.getElementById("clear_cache");
 let dir = path.join(tempDirectory,'webtorrent');

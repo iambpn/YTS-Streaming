@@ -114,6 +114,11 @@ ipcMain.on("server", (e, args) => {
                     res.json({'up':torrent.uploadSpeed,'down':torrent.downloadSpeed})
                 });
 
+                //get Title api
+                server.get("/title",(req,res)=>{
+                    res.json({'title':args.title})
+                });
+
                 //if torrent error occurs
                 torrent.on('error', function (err) {
                     dialog.showErrorBox('Torrent Error', err.toString());
@@ -125,9 +130,8 @@ ipcMain.on("server", (e, args) => {
                 })
 
                 //Strating server
-                let title = args.title;
                 server = server.listen(8000,'localhost', () => {
-                    createMoviePlayerWindow(title);
+                    createMoviePlayerWindow();
                 })
             });
 
@@ -174,7 +178,7 @@ function createWindow() {
         minWidth: 1000,
         minHeight: 600,
         darkTheme:true,
-        webPreferences: {nodeIntegration: true}
+        webPreferences: {nodeIntegration: true,enableRemoteModule: true}
     });
 
     // set background color of mainWindow
@@ -190,7 +194,7 @@ function createWindow() {
     mainWindow.loadFile('main.html')
 
     // Open DevTools - Remove for PRODUCTION!
-    // mainWindow.webContents.openDevTools()
+    mainWindow.webContents.openDevTools()
 
     // Listen for window being closed
     mainWindow.on('closed', () => {
@@ -216,13 +220,12 @@ let menu_from_template = Menu.buildFromTemplate([
 ]);
 
 // Create a Movie player BrowserWindow
-function createMoviePlayerWindow(title) {
+function createMoviePlayerWindow() {
     moviePlayerWindow = new BrowserWindow({
         width: 1000,
         height: 600,
         minWidth: 1000,
         minHeight: 600,
-        title: "Now Playing | " + title,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,

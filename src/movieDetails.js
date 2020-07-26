@@ -43,7 +43,7 @@ function setBackground(movie) {
 function generalIntro(movie) {
     let links = "";
     for (torrent of movie.torrents) {
-        links += `<a href="#" onclick="playVideo(event,'${torrent.hash}','${movie.title}')" title="Watch ${movie.title} in ${torrent.quality} Torrent" class="btn btn-secondary border-dark mr-2">${torrent.quality}.${torrent.type}</a>`
+        links += `<a href="#" onclick="playVideo(event,'${torrent.hash}','${movie.title.toString().replace(/'/g,"")}')" title="Watch ${movie.title} in ${torrent.quality} Torrent" class="btn btn-secondary border-dark mr-2">${torrent.quality}.${torrent.type}</a>`
     }
     let content = `<div class="row pt-5 justify-content-center">
     <div class="col-5 col-lg-3">

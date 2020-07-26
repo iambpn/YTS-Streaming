@@ -10,7 +10,7 @@
     <script src="http://127.0.0.1:8000/js/plyr.polyfilled.3.6.2.js"></script>
     <link rel="stylesheet" href="http://127.0.0.1:8000/css/plyr.3.6.2.css"/>
     <link rel="stylesheet" href="http://127.0.0.1:8000/css/bootstrap.min.css"/>
-
+    <title>Now Playing</title>
 </head>
 <body style="user-select:none;">
 <div style="width: 100%; height: 100%; position: absolute;">
@@ -53,6 +53,13 @@
     }
 
     initializeListener();
+
+    fetch('http://127.0.0.1:8000/title')
+        .then(res => {
+            res.json().then(data => {
+                document.title = data.title;
+            })
+        });
 
     const player = new Plyr("#player", {
         title: "",
@@ -111,18 +118,18 @@
         fetch('http://127.0.0.1:8000/speed')
             .then(res => {
                 res.json()
-                .then(data=>{
-                    data.up = (data.up/(1000*1000)).toString();
-                    data.up = data.up.slice(0, (data.up.indexOf("."))+3)
-                    data.down = (data.down/(1000*1000)).toString();
-                    data.down = data.down.slice(0, (data.down.indexOf("."))+3)
-                    document.getElementById("up_speed").innerHTML = data.up;
-                    document.getElementById("down_speed").innerHTML = data.down;
-                })
+                    .then(data => {
+                        data.up = (data.up / (1000 * 1000)).toString();
+                        data.up = data.up.slice(0, (data.up.indexOf(".")) + 3)
+                        data.down = (data.down / (1000 * 1000)).toString();
+                        data.down = data.down.slice(0, (data.down.indexOf(".")) + 3)
+                        document.getElementById("up_speed").innerHTML = data.up;
+                        document.getElementById("down_speed").innerHTML = data.down;
+                    })
             })
     }
 
-    let interval = setInterval(updateSpeed,3000);
+    let interval = setInterval(updateSpeed, 3000);
 </script>
 
 </body>
