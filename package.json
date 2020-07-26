@@ -1,6 +1,6 @@
 {
   "name": "YTS-Streaming",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "YTS Movie Streaming",
   "main": "main.js",
   "scripts": {
