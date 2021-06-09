@@ -1,17 +1,38 @@
-import {app,BrowserWindow} from "electron";
-import path from "path";
+import {app, ipcMain, shell} from "electron";
 import isDev from "electron-is-dev";
+import windowStateKeeper from "electron-window-state";
 
-let mainWindow:Electron.BrowserWindow;
+import path from "path";
+
+import MainWindow from "./electron_app/MainWindow";
+import "./electron_app/HandelIPC";
+
+let mainWindow: Electron.BrowserWindow;
 
 function createWindow() {
-    mainWindow = new BrowserWindow({width: 900, height: 680});
-    mainWindow.loadURL(isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`);
+    let url = isDev ? 'http://localhost:3000' : `file://${path.join(__dirname, '../build/index.html')}`;
+    let state = windowStateKeeper({
+        defaultWidth:1200,
+        defaultHeight:1000
+    });
+
+    mainWindow = new MainWindow(url,state);
     //@ts-ignore
     mainWindow.on('closed', () => mainWindow = null);
+
+    if(isDev) {
+        mainWindow.setAutoHideMenuBar(true);
+    }
+    else{
+        mainWindow.setMenuBarVisibility(false);
+    }
+
+    state.manage(mainWindow);
 }
 
-app.on('ready', createWindow);
+app.on('ready', () => {
+    createWindow();
+});
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
@@ -20,7 +41,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-    if (mainWindow === null) {
+    if (MainWindow.getAllWindows().length === 0) {
         createWindow();
     }
 });
