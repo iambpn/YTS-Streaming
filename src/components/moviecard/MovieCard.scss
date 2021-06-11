@@ -1,0 +1,27 @@
+.movie_title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.movie_date{
+  font-size: .9em;
+  color: #ADAFAE !important;
+}
+.movie_link{
+  cursor: pointer;
+}
+
+.card:hover .overlay, .overlay:hover {
+  display: block !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+}
+
+.card:hover{
+  border-color: #6ac045 !important;
+}

@@ -1,10 +1,10 @@
 import React, {useEffect, useState} from "react";
-import BackDrop from "../BackDrop";
-import packgae from "../../../package.json";
+import BackDrop from "../backdrop/BackDrop";
+import package_json from "../../../package.json";
 import styles from "./SettingsModal.module.scss";
 
 type SettingsModalProps = {
-    setSettingClick: React.Dispatch<React.SetStateAction<boolean>>
+    openSettings: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 function SettingModal(props: SettingsModalProps) {
@@ -19,11 +19,15 @@ function SettingModal(props: SettingsModalProps) {
     }, [])
 
     let handleMaxConChange = (e: React.FormEvent<HTMLInputElement>) => {
-        updateMaxCon(Number(e.currentTarget.value));
+        if (Number(e.currentTarget.value) === 0) {
+            updateMaxCon(55);
+        } else {
+            updateMaxCon(Number(e.currentTarget.value));
+        }
     }
 
     let handleCloseModal = () => {
-        props.setSettingClick(false);
+        props.openSettings(false);
         localStorage.setItem("MaxCon", String(maxCon));
     }
 
@@ -35,15 +39,15 @@ function SettingModal(props: SettingsModalProps) {
 
     let handleClearCache = () => {
         //@ts-ignore
-        window.api.send("Cache:ClearCache",null);
+        window.api.send("Cache:ClearCache", null);
         handleCloseModal();
     }
 
-    let handleShowCachedSpace= (e:React.FormEvent<HTMLButtonElement>)=>{
+    let handleShowCachedSpace = () => {
         //@ts-ignore
-        window.api.send("Cache:ShowSpaceRequest",null);
+        window.api.send("Cache:ShowSpaceRequest", null);
         //@ts-ignore
-        window.api.receive("Cache:ShowSpaceResponse",(data:string)=>{
+        window.api.receive("Cache:ShowSpaceResponse", (data: string) => {
             updateCachedSpaceTitle(data);
         });
     }
@@ -56,7 +60,7 @@ function SettingModal(props: SettingsModalProps) {
                     <div className="modal-content">
                         <div className="modal-header border-secondary">
                             <div className={"w-100 text-center"}>
-                                <h5 className={"modal-title"}>YST Settings V.{packgae.version}</h5>
+                                <h5 className={"modal-title"}>YST Settings V.{package_json.version}</h5>
                             </div>
                             <button type="button" className="btn-close" style={{margin: ".5rem"}}
                                     onClick={handleCloseModal}/>
@@ -85,8 +89,9 @@ function SettingModal(props: SettingsModalProps) {
                                 }} title="View Project on Github">
                                     View on Github
                                 </button>
-                                <button className="btn btn-secondary" id="clear_cache" onClick={handleClearCache} title={cachedSpaceTitle}
-                                onMouseOver={handleShowCachedSpace}>
+                                <button className="btn btn-secondary" id="clear_cache" onClick={handleClearCache}
+                                        title={cachedSpaceTitle}
+                                        onMouseOver={handleShowCachedSpace}>
                                     Clear Cache
                                 </button>
                             </div>
