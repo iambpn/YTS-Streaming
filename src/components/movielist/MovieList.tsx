@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React from "react";
 import MovieCard from "../moviecard/MovieCard";
 import ErrorHandling from "../Error Handling/ErrorHandling";
 
