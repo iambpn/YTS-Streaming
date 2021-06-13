@@ -1,5 +1,6 @@
 import React from "react";
 import "./MovieCard.scss";
+import {Link} from "react-router-dom"
 
 type MovieCardProps = {
     id: string,
@@ -11,15 +12,12 @@ type MovieCardProps = {
 }
 
 export default function MovieCard(props: MovieCardProps) {
-    let handleClick = () => {
-        console.log("clicked")
-    }
 
     return (
         <React.Fragment>
             <div className="col-3 mb-4">
                 <div style={{width: "fit-content"}} className="d-inline-block">
-                    <span className="movie_link" onClick={handleClick}>
+                    <Link to={"/movie?id="+props.id} className="movie_link">
                         <div className="card" style={{border: "5px solid white"}}>
                             <img className="img-fluid movie_image" src={props.mediumImageCover}
                                  alt={props.title} width="210" height="315"/>
@@ -38,7 +36,7 @@ export default function MovieCard(props: MovieCardProps) {
                                     }
                                 </div>
                                 <div className="text-center" style={{marginTop: "35px"}}>
-                                    <span className="btn btn-success fw-bold" onClick={handleClick}>View Details</span>
+                                    <Link to={"/movie?id="+props.id} className="btn btn-success fw-bold" >View Details</Link>
                                 </div>
                             </figcaption>
                         </div>
@@ -50,7 +48,7 @@ export default function MovieCard(props: MovieCardProps) {
                             {props.year}
                         </span>
                         </div>
-                    </span>
+                    </Link>
                 </div>
             </div>
         </React.Fragment>
