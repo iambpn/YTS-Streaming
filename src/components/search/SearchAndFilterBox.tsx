@@ -1,5 +1,6 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useContext} from "react";
 import Filter from "./Filter";
+import {AppContext} from "../../store/AppContextProvider";
 
 const FilterTypes = {
     "quality": ["All", "720p", "1080p", "2160p", "3D"],
@@ -16,12 +17,23 @@ type SearchAndFilterBoxProps = {
 }
 
 export default function SearchAndFilterBox(props: SearchAndFilterBoxProps) {
-    const [searchInput, updateSearchInput] = useState<string>("");
-    const [quality, updateQuality] = useState<string>("All");
-    const [genre, updateGenre] = useState<string>("All");
-    const [rating, updateRating] = useState<string>("All");
-    const [sortBy, updateSortBy] = useState<string>("date_added");
-    const fetchData = props.fetchData;
+    //extracting data from context (AppContext)
+    const context = useContext(AppContext);
+    const [searchInput,quality,genre,rating,sortBy] = [
+        context.currentQueries.search,
+        context.currentQueries.quality,
+        context.currentQueries.genre,
+        context.currentQueries.rating,
+        context.currentQueries.sortBy
+    ];
+
+    const [updateSearchInput,updateQuality,updateGenre,updateRating,updateSortBy] = [
+        context.updateQueries.search,
+        context.updateQueries.quality,
+        context.updateQueries.genre,
+        context.updateQueries.rating,
+        context.updateQueries.sortBy
+    ];
 
     let handleSearchInput = (e: React.FormEvent<HTMLInputElement>) => {
         updateSearchInput(e.currentTarget.value);
@@ -69,7 +81,7 @@ export default function SearchAndFilterBox(props: SearchAndFilterBoxProps) {
             if (sortBy.toLowerCase() !== "date_added") {
                 url.searchParams.set("sort_by", sortBy);
             }
-            fetchData(url);
+            props.fetchData(url);
         }
     }, [quality, genre, rating, sortBy])
 
