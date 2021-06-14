@@ -11,7 +11,7 @@ function App() {
             <AppContextProvider>
                 <Switch>
                     <Route component={EntryPage} path={"/"} exact={true}/>
-                    <Route component={MovieDetails} path={"/movie"} exact={true}/>
+                    <Route component={MovieDetails} path={"/movie/:id"} exact={true}/>
                 </Switch>
             </AppContextProvider>
         </React.Fragment>
