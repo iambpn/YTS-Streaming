@@ -22,6 +22,7 @@ export default function EntryPage() {
             })
             .catch((err) => {
                 updateSearchResponse(err.toString());
+                updateLoading(false);
             })
     }
 
