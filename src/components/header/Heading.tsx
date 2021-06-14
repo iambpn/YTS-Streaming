@@ -24,7 +24,7 @@ export default function Heading(props: any) {
 
                     }
                     <nav className="navbar navbar-dark bg-dark justify-content-center border-0">
-                        <img src="public_assets/images/logo-YTS.svg" alt="Logo" className="d-inline-block align-top"/>
+                        <img src="/public_assets/images/logo-YTS.svg" alt="Logo" className="d-inline-block align-top"/>
                     </nav>
                     <div className="position-absolute" style={{top: "27px", right: "150px"}}>
                         {/*Setting Icon*/}
