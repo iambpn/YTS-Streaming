@@ -1,6 +1,6 @@
 import React from "react";
 import MovieCard from "../moviecard/MovieCard";
-import ErrorHandling from "../Error Handling/ErrorHandling";
+import ErrorHandling from "../ErrorHandling/ErrorHandling";
 
 type MovieListProps = {
     movieListOrError: any,
@@ -10,7 +10,7 @@ type MovieListProps = {
 
 export default function MovieList(props: MovieListProps) {
 
-    //Error Handling
+    //ErrorHandling
     if (props.movieListOrError.status !== "ok") {
         return <ErrorHandling error={props.movieListOrError}/>
     }
