@@ -1,6 +1,7 @@
 import React from "react";
 import "./MovieIntro.scss";
 import {useHistory} from "react-router-dom";
+import {getMaxConSettings} from "../header/SettingsModal";
 
 type MovieIntroProps = {
     movie: any,
@@ -11,8 +12,15 @@ export default function MovieIntro(props: MovieIntroProps) {
     const history = useHistory();
 
     let handleClickOnLink = (hash: string) => {
-        console.log(hash);
+        let maxCon = getMaxConSettings();
+        //@ts-ignore
+        window.api.send("video:play",{
+            hash,
+            title: props.movie.title,
+            maxCon
+        })
     }
+    
     let openSubtitle = () => {
         //@ts-ignore
         window.api.send("ExternalLink:Open", "https://yifysubtitles.org/movie-imdb/" + props.movie.imdb_code);
@@ -33,7 +41,7 @@ export default function MovieIntro(props: MovieIntroProps) {
     }
 
     let suggestions: JSX.Element[] = [];
-    props.suggestions.forEach((suggestion, index) => {
+    props.suggestions.forEach((suggestion) => {
         let tmp = (
             <div className={"col-6 mb-4 g-0 d-flex justify-content-center"} title={suggestion.title} onClick={
                 (e) => {
@@ -42,7 +50,7 @@ export default function MovieIntro(props: MovieIntroProps) {
             } key={suggestion.id}>
                 <div className="rounded suggestion" style={{border: "5px solid white", width: "max-content"}}>
                     <img src={suggestion.medium_cover_image} className="d-inline-block align-top" width={100}
-                         height={140}/>
+                         height={140} alt={""}/>
                 </div>
             </div>
         );
@@ -55,7 +63,7 @@ export default function MovieIntro(props: MovieIntroProps) {
                 <div className="col-3 col-lg-3 d-flex justify-content-center mb-lg-0 mb-5">
                     <div className="rounded" style={{border: "5px solid white", width: "max-content"}}>
                         <img src={props.movie.medium_cover_image} className="d-inline-block align-top"
-                             style={{minWidth: "210px", minHeight: "315px"}}/>
+                             style={{minWidth: "210px", minHeight: "315px"}} alt={""}/>
                     </div>
                 </div>
                 <div className="col-lg-1"/>
