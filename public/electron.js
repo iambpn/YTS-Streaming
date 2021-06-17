@@ -8,8 +8,173 @@ const electron_is_dev_1 = __importDefault(require("electron-is-dev"));
 const electron_window_state_1 = __importDefault(require("electron-window-state"));
 const path_1 = __importDefault(require("path"));
 const MainWindow_1 = __importDefault(require("./electron_app/MainWindow"));
-require("./electron_app/HandelIPC");
-let mainWindow;
+const VideoPlayerWindow_1 = __importDefault(require("./electron_app/VideoPlayerWindow"));
+const os_1 = __importDefault(require("os"));
+const fs_1 = __importDefault(require("fs"));
+const webtorrent_1 = __importDefault(require("webtorrent"));
+const express_1 = __importDefault(require("express"));
+const srt2vtt_1 = __importDefault(require("srt2vtt"));
+//@ts-ignore
+let mainWindow = null;
+//@ts-ignore
+let videoPlayerWindow = null;
+//@ts-ignore
+let client = null;
+//@ts-ignore
+let server = null;
+electron_1.ipcMain.on("ExternalLink:Open", (event, link) => {
+    electron_1.shell.openExternal(link);
+});
+electron_1.ipcMain.on("Cache:ClearCache", (event, data) => {
+    let dir = path_1.default.join(os_1.default.tmpdir(), 'webtorrent');
+    if (fs_1.default.existsSync(dir)) {
+        fs_1.default.rmdir(dir, { recursive: true }, () => {
+        });
+    }
+});
+electron_1.ipcMain.on("Cache:ShowSpaceRequest", (event, data) => {
+    let dir = path_1.default.join(os_1.default.tmpdir(), 'webtorrent');
+    if (fs_1.default.existsSync(dir)) {
+        fs_1.default.readdir(dir, (err, files) => {
+            event.sender.send("Cache:ShowSpaceResponse", `${files.length} folder are in cache. About ${files.length * 500} MB data`);
+        });
+    }
+    else {
+        event.sender.send("Cache:ShowSpaceResponse", `0 folder are in cache.`);
+    }
+});
+electron_1.ipcMain.on("video:play", (event, data) => {
+    if (server != null || client != null) {
+        electron_1.dialog.showErrorBox("Movie player is already running", "An instance of Movie Player is already running. Please close the existing movie player and try again.");
+        return;
+    }
+    let app = express_1.default();
+    //hosting files
+    app.get("/plyr-js", function (req, res) {
+        res.sendFile(path_1.default.join(__dirname, "public_assets/video_player/plyr3.6.8.polyfilled.min.js"));
+    });
+    app.get("/plyr-css", function (req, res) {
+        res.sendFile(path_1.default.join(__dirname, "public_assets/video_player/plyr3.6.8.min.css"));
+    });
+    app.get("/bootstrapv5", function (req, res) {
+        res.sendFile(path_1.default.join(__dirname, "public_assets/bootstrap/bootstrap.min.css"));
+    });
+    app.get("/streaming", function (req, res) {
+        res.sendFile(path_1.default.join(__dirname, "video.html"));
+    });
+    // hosting files end
+    let maxCon = data.maxCon !== null ? Number(data.maxCon) : 55;
+    client = new webtorrent_1.default({ maxConns: maxCon });
+    client.add(data.hash, {}, (torrent) => {
+        let files = torrent.files.sort();
+        let videoFile = files.find(function (file) {
+            return file.name.endsWith(".mp4");
+        });
+        if (videoFile === undefined) {
+            electron_1.dialog.showErrorBox("Media content not supported", "No streamable video source found");
+            // instead download the movie
+            return;
+        }
+        else {
+            // host video file
+            app.get("/video", function (req, res) {
+                const fileSize = videoFile.length;
+                const range = req.headers.range;
+                if (range) {
+                    const parts = range.replace(/bytes=/, "").split("-");
+                    const start = parseInt(parts[0], 10);
+                    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+                    const chunkSize = end - start + 1;
+                    const stream = videoFile.createReadStream({ start, end });
+                    const head = {
+                        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+                        "Accept-Ranges": "bytes",
+                        "Content-Length": chunkSize,
+                        "Content-Type": "video/mp4",
+                    };
+                    res.writeHead(206, head);
+                    stream.pipe(res);
+                }
+                else {
+                    const head = {
+                        "Content-Length": fileSize,
+                        "Content-Type": "video/mp4",
+                    };
+                    res.writeHead(200, head);
+                    videoFile.createReadStream().pipe(res);
+                }
+            });
+            //subtitle api
+            app.get('/subtitleApi/add', (req, res) => {
+                try {
+                    if (req.query.path) {
+                        //@ts-ignore
+                        let path_query = req.query.path;
+                        let subtitle_path = path_query.split('.');
+                        if (subtitle_path[subtitle_path.length - 1] === 'srt') {
+                            let srtData = fs_1.default.readFileSync(path_query);
+                            let newPath = path_1.default.join(torrent.path, "/", 'customCaption.vtt');
+                            srt2vtt_1.default(srtData, function (err, vttData) {
+                                if (err)
+                                    throw new Error(err);
+                                fs_1.default.writeFileSync(newPath, vttData);
+                                fs_1.default.createReadStream(newPath).pipe(res);
+                            });
+                        }
+                        else if (subtitle_path[subtitle_path.length - 1] === 'vtt') {
+                            fs_1.default.createReadStream(path_query).pipe(res);
+                        }
+                        else {
+                            throw new Error("Subtitle MIME type not supported. Should be .srt or .vtt");
+                        }
+                    }
+                    else {
+                        throw new Error("Subtitle path not found");
+                    }
+                }
+                catch (err) {
+                    electron_1.dialog.showErrorBox("Error while adding subtitle", err.toString());
+                    res.sendStatus(400);
+                }
+            });
+            //speed api
+            app.get("/speed", (req, res) => {
+                res.json({ 'up': torrent.uploadSpeed, 'down': torrent.downloadSpeed });
+            });
+            //get Title api
+            app.get("/title", (req, res) => {
+                res.json({ 'title': data.title });
+            });
+        }
+        //if torrent error occurs
+        torrent.on('error', function (err) {
+            electron_1.dialog.showErrorBox('Torrent Error', err.toString());
+        });
+        // if no peers in torrent
+        torrent.on('noPeers', function (announceType) {
+            electron_1.dialog.showErrorBox('Torrent Warning', 'No peers available to stream.');
+        });
+        server = app.listen(9000, 'localhost', () => {
+            console.log("server ready");
+            createVideoPlayerWindow();
+        });
+    });
+    client.on("error", (err) => {
+        electron_1.dialog.showErrorBox("Torrent Client Error", err.toString());
+    });
+});
+function closeServerAndClient() {
+    //@ts-ignore
+    server.close(() => {
+        console.log("server closed");
+        //@ts-ignore
+        server = null;
+    });
+    client.destroy(() => {
+        //@ts-ignore
+        client = null;
+    });
+}
 function createWindow() {
     let url = electron_is_dev_1.default ? 'http://localhost:3000' : `file://${path_1.default.join(__dirname, '../build/index.html')}`;
     let state = electron_window_state_1.default({
@@ -17,15 +182,32 @@ function createWindow() {
         defaultHeight: 1000
     });
     mainWindow = new MainWindow_1.default(url, state);
-    //@ts-ignore
-    mainWindow.on('closed', () => mainWindow = null);
     if (electron_is_dev_1.default) {
         mainWindow.setAutoHideMenuBar(true);
     }
     else {
         mainWindow.setMenuBarVisibility(false);
     }
+    mainWindow.on('closed', () => {
+        //@ts-ignore
+        mainWindow = null;
+        if (videoPlayerWindow != null) {
+            videoPlayerWindow.close();
+        }
+    });
     state.manage(mainWindow);
+}
+function createVideoPlayerWindow() {
+    let url = "http://127.0.0.1:9000/streaming";
+    videoPlayerWindow = new VideoPlayerWindow_1.default(url, mainWindow);
+    if (electron_is_dev_1.default) {
+        videoPlayerWindow.webContents.toggleDevTools();
+    }
+    videoPlayerWindow.on('closed', () => {
+        closeServerAndClient();
+        //@ts-ignore
+        videoPlayerWindow = null;
+    });
 }
 electron_1.app.on('ready', () => {
     createWindow();
