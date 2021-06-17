@@ -3,8 +3,14 @@ import BackDrop from "../backdrop/BackDrop";
 import package_json from "../../../package.json";
 import styles from "./SettingsModal.module.scss";
 
+// to do: play from external source
+
 type SettingsModalProps = {
     openSettings: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+function getMaxConSettings():string|null{
+    return localStorage.getItem("MaxCon");
 }
 
 function SettingModal(props: SettingsModalProps) {
@@ -118,3 +124,4 @@ function SettingModal(props: SettingsModalProps) {
 }
 
 export default SettingModal;
+export {getMaxConSettings}
