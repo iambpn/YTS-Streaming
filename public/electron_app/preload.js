@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 electron_1.contextBridge.exposeInMainWorld("api", {
     send: (channel, data) => {
-        let allow_channels = ["ExternalLink:Open", "Cache:ClearCache", "Cache:ShowSpaceRequest"];
+        let allow_channels = ["ExternalLink:Open", "Cache:ClearCache", "Cache:ShowSpaceRequest", "video:play"];
         if (allow_channels.includes(channel)) {
             electron_1.ipcRenderer.send(channel, data);
         }

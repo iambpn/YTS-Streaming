@@ -3,7 +3,7 @@ import {ipcRenderer, contextBridge} from "electron";
 contextBridge.exposeInMainWorld(
     "api", {
         send: (channel: string, data: any) => {
-            let allow_channels = ["ExternalLink:Open","Cache:ClearCache","Cache:ShowSpaceRequest"];
+            let allow_channels = ["ExternalLink:Open","Cache:ClearCache","Cache:ShowSpaceRequest","video:play"];
             if (allow_channels.includes(channel)) {
                 ipcRenderer.send(channel, data);
             }
