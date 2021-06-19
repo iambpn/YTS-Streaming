@@ -9,7 +9,7 @@ class VideoPlayerWindow extends BrowserWindow {
             minHeight: 600,
             darkTheme: true,
             backgroundColor: "#060606",
-            title: "Now Playing",
+            title: "YTS-Player",
             autoHideMenuBar: true,
             webPreferences:{
                 enableRemoteModule:false
