@@ -14,14 +14,14 @@ export default function MovieIntro(props: MovieIntroProps) {
     let handleClickOnLink = (hash: string) => {
         let maxCon = getMaxConSettings();
         //@ts-ignore
-        window.api.send("video:play",{
+        window.api.send("video:play", {
             hash,
             title: props.movie.title,
             maxCon
         })
     }
-    
-    let openSubtitle = () => {
+
+    let downloadSubtitle = () => {
         //@ts-ignore
         window.api.send("ExternalLink:Open", "https://yifysubtitles.org/movie-imdb/" + props.movie.imdb_code);
     }
@@ -79,7 +79,7 @@ export default function MovieIntro(props: MovieIntroProps) {
                     </div>
                     <div className={"mb-4"}>
                         <button className="btn btn-success" title={"Download subtitles for " + props.movie.title}
-                                style={{fontSize: ".9em"}} onClick={openSubtitle}>
+                                style={{fontSize: ".9em"}} onClick={downloadSubtitle}>
                             Download Subtitles
                         </button>
                     </div>
