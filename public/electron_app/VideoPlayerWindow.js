@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const electron_1 = require("electron");
 class VideoPlayerWindow extends electron_1.BrowserWindow {
-    constructor(url, parentWindow) {
+    constructor(url) {
         super({
             width: 1000,
             height: 600,

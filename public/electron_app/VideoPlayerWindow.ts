@@ -1,7 +1,7 @@
 import {BrowserWindow, Menu, shell,} from "electron";
 
 class VideoPlayerWindow extends BrowserWindow {
-    constructor(url: string, parentWindow: BrowserWindow) {
+    constructor(url: string) {
         super({
             width: 1000,
             height: 600,
