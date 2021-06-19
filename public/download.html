@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="./public_assets/bootstrap/bootstrap.min.css">
+    <title>Downloader</title>
+</head>
+<body style="user-select: none">
+<div class="container align-items-center d-flex" style="height: 100vh;">
+    <div class="w-100">
+        <div class="row g-0 justify-content-between w-100">
+            <div class="col-8 g-0">
+                <h6 class="text-truncate w-100 d-inline-block mb-0">Downloading:
+                    <span id="title"></span>
+                </h6>
+            </div>
+            <div class="col-4 g-0 text-end" style="font-size: 16px;">
+                <span class="pr-1"><span id="up_speed">0</span> &uarr;M</span>
+                <span>/</span>
+                <span class="pr-2"><span id="down_speed">0</span> &darr;M</span>
+            </div>
+        </div>
+        <div class="progress w-100">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="d-flex justify-content-end w-100">
+            <button class="btn btn-outline-warning m-1 mt-2" id="pause">Pause</button>
+            <button class="btn btn-outline-primary m-1 mt-2 d-none" id="resume">Resume</button>
+            <button class="btn btn-outline-danger m-1 mt-2" id="cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+<script>
+
+    let upSpeed = document.getElementById("up_speed");
+    let downSpeed = document.getElementById("down_speed");
+    let title = document.getElementById("title");
+    let progressBar = document.getElementById("progressBar");
+    let pause = document.getElementById("pause");
+    let resume = document.getElementById("resume");
+    let cancel = document.getElementById("cancel");
+
+    window.api.receive("download:info", (data) => {
+        // update speed
+        data.uploadSpeed = (data.uploadSpeed / (1000 * 1000)).toString(); // to MB
+        data.uploadSpeed = data.uploadSpeed.slice(0, (data.uploadSpeed.indexOf(".")) + 3) //Slice
+
+        data.downloadSpeed = (data.downloadSpeed / (1000 * 1000)).toString();
+        data.downloadSpeed = data.downloadSpeed.slice(0, (data.downloadSpeed.indexOf(".")) + 3)
+
+        upSpeed.innerHTML = data.uploadSpeed;
+        downSpeed.innerHTML = data.downloadSpeed;
+
+        // update title
+        if (title.innerText === "") {
+            title.innerText = data.title;
+            title.title = data.title;
+        }
+
+        // update progress bar
+        data.progress = (data.progress * 100).toString(); // to 100%
+        data.progress = data.progress.slice(0, data.progress.indexOf(".") + 2); //slice
+        progressBar.style.width = `${data.progress}%`;
+        progressBar.innerText = `${data.progress}%`;
+    })
+
+    pause.addEventListener("click", () => {
+        window.api.send("download:pause", null);
+        pause.classList.add("d-none");
+        resume.classList.remove("d-none");
+    })
+    resume.addEventListener("click", () => {
+        window.api.send("download:resume", null);
+        resume.classList.add("d-none");
+        pause.classList.remove("d-none");
+    })
+    cancel.addEventListener("click", () => {
+        window.api.send("download:stop", null);
+    })
+
+</script>
