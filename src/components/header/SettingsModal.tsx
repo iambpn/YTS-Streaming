@@ -3,19 +3,18 @@ import BackDrop from "../backdrop/BackDrop";
 import package_json from "../../../package.json";
 import styles from "./SettingsModal.module.scss";
 
-// to do: play from external source
-
 type SettingsModalProps = {
     openSettings: React.Dispatch<React.SetStateAction<boolean>>
 }
 
-function getMaxConSettings():string|null{
+function getMaxConSettings(): string | null {
     return localStorage.getItem("MaxCon");
 }
 
 function SettingModal(props: SettingsModalProps) {
     const [maxCon, updateMaxCon] = useState<number>(55);
     const [cachedSpaceTitle, updateCachedSpaceTitle] = useState<string>("");
+    const [torrentLink, updateTorrentLink] = useState<string>("");
 
     useEffect(() => {
         let maxCon = localStorage.getItem("MaxCon");
@@ -58,6 +57,17 @@ function SettingModal(props: SettingsModalProps) {
         });
     }
 
+    let handlePlayExternalSrc = () => {
+        if (torrentLink.trim() !== "") {
+            // @ts-ignore
+            window.api.send("video:play", {
+                hash: torrentLink,
+                maxCon: maxCon,
+            })
+            handleCloseModal();
+        }
+    }
+
     return (
         <React.Fragment>
             <BackDrop onClick={handleCloseModal}/>
@@ -80,6 +90,31 @@ function SettingModal(props: SettingsModalProps) {
                                 <div style={{width: "35%"}}>
                                     <input type="number" className="form-control" id="max_connection" value={maxCon}
                                            onChange={handleMaxConChange}/>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="modal-body border-top border-secondary">
+                            <div>
+                                <label htmlFor={"magnetLink"}>Play from External Source:</label>
+                                <div className={"row g-2 align-items-end"}>
+                                    <div className="col-11">
+                                        <input type="text" className="form-control mt-2" id="magnetLink"
+                                               value={torrentLink}
+                                               onChange={(e) => {
+                                                   updateTorrentLink(e.currentTarget.value);
+                                               }}
+                                               onKeyUp={(e) => {
+                                                   if (e.code.toLowerCase() === "enter") {
+                                                       handlePlayExternalSrc()
+                                                   }
+                                               }} placeholder={"Torrent magnet link / Torrent hash"}/>
+                                    </div>
+                                    <div className={"col-1 text-center"}>
+                                        <svg className={"btn-outline-success " + styles.playSvg}
+                                             onClick={handlePlayExternalSrc} xlinkTitle={"Play"}>
+                                            <use xlinkHref="/public_assets/images/play-button.svg#Capa_1"></use>
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
                         </div>
