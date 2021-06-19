@@ -12,7 +12,8 @@ export default class DownloaderWindow extends BrowserWindow{
             title: "Downloader",
             webPreferences:{
                 preload: path.join(__dirname, "preload.js"),
-                enableRemoteModule:false
+                enableRemoteModule:false,
+                backgroundThrottling: false
             }
         });
         this.setMenuBarVisibility(false);

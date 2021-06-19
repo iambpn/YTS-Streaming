@@ -16,7 +16,8 @@ class DownloaderWindow extends electron_1.BrowserWindow {
             title: "Downloader",
             webPreferences: {
                 preload: path_1.default.join(__dirname, "preload.js"),
-                enableRemoteModule: false
+                enableRemoteModule: false,
+                backgroundThrottling: false
             }
         });
         this.setMenuBarVisibility(false);
