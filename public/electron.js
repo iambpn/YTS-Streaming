@@ -144,13 +144,17 @@ electron_1.ipcMain.on("video:play", (event, data) => {
                     res.sendStatus(400);
                 }
             });
+            // downloadInfo api
+            app.get("/downloadInfo", (req, res) => {
+                res.json({ 'total_downloaded': torrent.downloaded, 'total_size': torrent.length });
+            });
             //speed api
             app.get("/speed", (req, res) => {
                 res.json({ 'up': torrent.uploadSpeed, 'down': torrent.downloadSpeed });
             });
             //get Title api
             app.get("/title", (req, res) => {
-                res.json({ 'title': data.title });
+                res.json({ 'title': data.title === undefined ? "YTS-Player" : "YTS-Player - " + data.title });
             });
             // start server
             server = app.listen(9000, 'localhost', () => {
@@ -235,7 +239,9 @@ function downloadMovieInstead(hash, maxCon, previousPath) {
                 "progress": torrent.progress,
                 "downloadSpeed": torrent.downloadSpeed,
                 "uploadSpeed": torrent.uploadSpeed,
-                "title": torrent.name
+                "title": torrent.name,
+                "downloadSize": torrent.length,
+                "totalDownloaded": torrent.downloaded
             });
             downloaderWindow.setProgressBar(torrent.progress);
         });
@@ -276,7 +282,7 @@ function createWindow() {
         defaultHeight: 1000
     });
     mainWindow = new MainWindow_1.default(url, state);
-    if (!electron_is_dev_1.default) {
+    if (electron_is_dev_1.default) {
         mainWindow.setAutoHideMenuBar(true);
     }
     else {

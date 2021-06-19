@@ -21,7 +21,7 @@ let client: WebTorrent.Instance = null;
 //@ts-ignore
 let server: http.Server = null;
 //@ts-ignore
-let downloaderWindow:BrowserWindow = null;
+let downloaderWindow: BrowserWindow = null;
 
 ipcMain.on("ExternalLink:Open", (event, link: string) => {
     shell.openExternal(link)
@@ -46,7 +46,12 @@ ipcMain.on("Cache:ShowSpaceRequest", (event, data: null) => {
     }
 })
 
-ipcMain.on("video:play", (event, data) => {
+type videoPlayData = {
+    hash: string,
+    title?: string,
+    maxCon: string | null
+}
+ipcMain.on("video:play", (event, data: videoPlayData) => {
     if (server != null || client != null) {
         dialog.showErrorBox("Movie player or Downloader is already running", "An instance of Movie Player | Downloader is already running. Please close the existing  or downloader window and try again.");
         return;
@@ -148,6 +153,11 @@ ipcMain.on("video:play", (event, data) => {
                 }
             });
 
+            // downloadInfo api
+            app.get("/downloadInfo",(req,res)=>{
+                res.json({'total_downloaded': torrent.downloaded, 'total_size': torrent.length})
+            });
+
             //speed api
             app.get("/speed", (req, res) => {
                 res.json({'up': torrent.uploadSpeed, 'down': torrent.downloadSpeed})
@@ -155,7 +165,7 @@ ipcMain.on("video:play", (event, data) => {
 
             //get Title api
             app.get("/title", (req, res) => {
-                res.json({'title': data.title})
+                res.json({'title': data.title === undefined ? "YTS-Player" : "YTS-Player - "+data.title})
             });
 
             // start server
@@ -195,7 +205,7 @@ function closeServerAndClient() {
     });
 }
 
-function downloadMovieInstead(hash: string, maxCon: number, previousPath:string) {
+function downloadMovieInstead(hash: string, maxCon: number, previousPath: string) {
     // delete previous path
     if (fs.existsSync(previousPath)) {
         fs.rmdir(previousPath, {recursive: true}, () => {
@@ -234,27 +244,29 @@ function downloadMovieInstead(hash: string, maxCon: number, previousPath:string)
         createDownloaderWindow();
 
         // add IPC listener for torrent
-        ipcMain.on("download:stop",()=>{
+        ipcMain.on("download:stop", () => {
             downloaderWindow.close();
         })
 
-        ipcMain.on("download:pause",()=>{
+        ipcMain.on("download:pause", () => {
             console.log("torrent Paused");
             torrent.pause()
         })
 
-        ipcMain.on("download:resume",()=>{
+        ipcMain.on("download:resume", () => {
             console.log("torrent resumed");
             torrent.resume();
         })
 
         // every time torrent downloads
         torrent.on("download", (bytes) => {
-            downloaderWindow.webContents.send("download:info",{
-                "progress":torrent.progress,
-                "downloadSpeed":torrent.downloadSpeed,
-                "uploadSpeed":torrent.uploadSpeed,
-                "title":torrent.name
+            downloaderWindow.webContents.send("download:info", {
+                "progress": torrent.progress,
+                "downloadSpeed": torrent.downloadSpeed,
+                "uploadSpeed": torrent.uploadSpeed,
+                "title": torrent.name,
+                "downloadSize": torrent.length,
+                "totalDownloaded": torrent.downloaded
             })
             downloaderWindow.setProgressBar(torrent.progress);
         })
@@ -301,7 +313,7 @@ function createWindow() {
     });
     mainWindow = new MainWindow(url, state);
 
-    if (!isDev) {
+    if (isDev) {
         mainWindow.setAutoHideMenuBar(true);
     } else {
         mainWindow.setMenuBarVisibility(false);
@@ -337,12 +349,12 @@ function createVideoPlayerWindow() {
     });
 }
 
-function createDownloaderWindow(){
-    let url = isDev ? `file://${path.join(__dirname,'download.html')}` : `file://${path.join(__dirname, '../build/download.html')}`;
+function createDownloaderWindow() {
+    let url = isDev ? `file://${path.join(__dirname, 'download.html')}` : `file://${path.join(__dirname, '../build/download.html')}`;
     downloaderWindow = new DownloaderWindow(url);
 
     downloaderWindow.on('closed', () => {
-        client.destroy(()=>{
+        client.destroy(() => {
             console.log("Client destroyed on window closed")
             //@ts-ignore
             client = null;
