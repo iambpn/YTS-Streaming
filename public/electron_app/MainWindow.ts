@@ -15,7 +15,8 @@ class MainWindow extends BrowserWindow {
             backgroundColor:"#060606",
             title: "YTS-Streaming",
             webPreferences: {
-                preload: path.join(__dirname, "preload.js")
+                preload: path.join(__dirname, "preload.js"),
+                backgroundThrottling: false
             }
         })
         this.loadURL(url);

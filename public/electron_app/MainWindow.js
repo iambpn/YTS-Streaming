@@ -18,7 +18,8 @@ class MainWindow extends electron_1.BrowserWindow {
             backgroundColor: "#060606",
             title: "YTS-Streaming",
             webPreferences: {
-                preload: path_1.default.join(__dirname, "preload.js")
+                preload: path_1.default.join(__dirname, "preload.js"),
+                backgroundThrottling: false
             }
         });
         this.loadURL(url);
