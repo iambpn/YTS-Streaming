@@ -14,6 +14,7 @@ const fs_1 = __importDefault(require("fs"));
 const webtorrent_1 = __importDefault(require("webtorrent"));
 const express_1 = __importDefault(require("express"));
 const srt2vtt_1 = __importDefault(require("srt2vtt"));
+const DownloaderWindow_1 = __importDefault(require("./electron_app/DownloaderWindow"));
 //@ts-ignore
 let mainWindow = null;
 //@ts-ignore
@@ -22,6 +23,8 @@ let videoPlayerWindow = null;
 let client = null;
 //@ts-ignore
 let server = null;
+//@ts-ignore
+let downloaderWindow = null;
 electron_1.ipcMain.on("ExternalLink:Open", (event, link) => {
     electron_1.shell.openExternal(link);
 });
@@ -45,7 +48,7 @@ electron_1.ipcMain.on("Cache:ShowSpaceRequest", (event, data) => {
 });
 electron_1.ipcMain.on("video:play", (event, data) => {
     if (server != null || client != null) {
-        electron_1.dialog.showErrorBox("Movie player is already running", "An instance of Movie Player is already running. Please close the existing movie player and try again.");
+        electron_1.dialog.showErrorBox("Movie player or Downloader is already running", "An instance of Movie Player | Downloader is already running. Please close the existing  or downloader window and try again.");
         return;
     }
     let app = express_1.default();
@@ -71,8 +74,12 @@ electron_1.ipcMain.on("video:play", (event, data) => {
             return file.name.endsWith(".mp4");
         });
         if (videoFile === undefined) {
-            electron_1.dialog.showErrorBox("Media content not supported", "No streamable video source found");
-            // instead download the movie
+            client.destroy(() => {
+                console.log("Client destroyed before download Movie");
+                //@ts-ignore
+                client = null;
+                downloadMovieInstead(data.hash, maxCon, torrent.path);
+            });
             return;
         }
         else {
@@ -145,6 +152,11 @@ electron_1.ipcMain.on("video:play", (event, data) => {
             app.get("/title", (req, res) => {
                 res.json({ 'title': data.title });
             });
+            // start server
+            server = app.listen(9000, 'localhost', () => {
+                console.log("server ready");
+                createVideoPlayerWindow();
+            });
         }
         //if torrent error occurs
         torrent.on('error', function (err) {
@@ -154,11 +166,8 @@ electron_1.ipcMain.on("video:play", (event, data) => {
         torrent.on('noPeers', function (announceType) {
             electron_1.dialog.showErrorBox('Torrent Warning', 'No peers available to stream.');
         });
-        server = app.listen(9000, 'localhost', () => {
-            console.log("server ready");
-            createVideoPlayerWindow();
-        });
     });
+    // error in torrent client
     client.on("error", (err) => {
         electron_1.dialog.showErrorBox("Torrent Client Error", err.toString());
     });
@@ -175,6 +184,91 @@ function closeServerAndClient() {
         client = null;
     });
 }
+function downloadMovieInstead(hash, maxCon, previousPath) {
+    // delete previous path
+    if (fs_1.default.existsSync(previousPath)) {
+        fs_1.default.rmdir(previousPath, { recursive: true }, () => {
+        });
+    }
+    let downloadRes = electron_1.dialog.showMessageBoxSync(mainWindow, {
+        type: "info",
+        title: "Media content not supported by YTS Player",
+        message: "Do you want to download it instead?",
+        detail: "No streamable video source found in the torrent to stream. \nYou can download it instead and play with another video player",
+        buttons: ["Download", "Cancel"],
+        defaultId: 0,
+        cancelId: 1,
+        noLink: true
+    });
+    let downloadPath = undefined;
+    if (downloadRes === 0) {
+        downloadPath = electron_1.dialog.showOpenDialogSync({
+            title: "Choose Download Location",
+            properties: [
+                "dontAddToRecent",
+                "openDirectory",
+            ]
+        });
+    }
+    if (downloadPath === undefined) {
+        return;
+    }
+    // only download no need to stream from here
+    client = new webtorrent_1.default({ maxConns: maxCon });
+    client.add(hash, { path: downloadPath[0] }, (torrent) => {
+        createDownloaderWindow();
+        // add IPC listener for torrent
+        electron_1.ipcMain.on("download:stop", () => {
+            downloaderWindow.close();
+        });
+        electron_1.ipcMain.on("download:pause", () => {
+            console.log("torrent Paused");
+            torrent.pause();
+        });
+        electron_1.ipcMain.on("download:resume", () => {
+            console.log("torrent resumed");
+            torrent.resume();
+        });
+        // every time torrent downloads
+        torrent.on("download", (bytes) => {
+            downloaderWindow.webContents.send("download:info", {
+                "progress": torrent.progress,
+                "downloadSpeed": torrent.downloadSpeed,
+                "uploadSpeed": torrent.uploadSpeed,
+                "title": torrent.name
+            });
+            downloaderWindow.setProgressBar(torrent.progress);
+        });
+        // on torrent complete
+        torrent.on("done", () => {
+            downloaderWindow.close();
+            let completeRes = electron_1.dialog.showMessageBoxSync({
+                type: "info",
+                title: "Download Completed",
+                message: torrent.name + " downloaded",
+                buttons: ["Close", "Open Folder"],
+                cancelId: 0,
+                defaultId: 1,
+                noLink: true
+            });
+            if (completeRes === 1 && downloadPath !== undefined) {
+                electron_1.shell.openPath(downloadPath[0]);
+            }
+        });
+        //if torrent error occurs
+        torrent.on('error', function (err) {
+            electron_1.dialog.showErrorBox('Torrent Error', err.toString());
+        });
+        // if no peers in torrent
+        torrent.on('noPeers', function (announceType) {
+            electron_1.dialog.showErrorBox('Torrent Warning', 'No peers available to stream.');
+        });
+    });
+    // error in torrent client
+    client.on("error", (err) => {
+        electron_1.dialog.showErrorBox("Torrent Client Error", err.toString());
+    });
+}
 function createWindow() {
     let url = electron_is_dev_1.default ? 'http://localhost:3000' : `file://${path_1.default.join(__dirname, '../build/index.html')}`;
     let state = electron_window_state_1.default({
@@ -182,7 +276,7 @@ function createWindow() {
         defaultHeight: 1000
     });
     mainWindow = new MainWindow_1.default(url, state);
-    if (electron_is_dev_1.default) {
+    if (!electron_is_dev_1.default) {
         mainWindow.setAutoHideMenuBar(true);
     }
     else {
@@ -194,12 +288,15 @@ function createWindow() {
         if (videoPlayerWindow != null) {
             videoPlayerWindow.close();
         }
+        if (downloaderWindow != null) {
+            downloaderWindow.close();
+        }
     });
     state.manage(mainWindow);
 }
 function createVideoPlayerWindow() {
     let url = "http://127.0.0.1:9000/streaming";
-    videoPlayerWindow = new VideoPlayerWindow_1.default(url, mainWindow);
+    videoPlayerWindow = new VideoPlayerWindow_1.default(url);
     if (electron_is_dev_1.default) {
         videoPlayerWindow.webContents.toggleDevTools();
     }
@@ -207,6 +304,19 @@ function createVideoPlayerWindow() {
         closeServerAndClient();
         //@ts-ignore
         videoPlayerWindow = null;
+    });
+}
+function createDownloaderWindow() {
+    let url = electron_is_dev_1.default ? `file://${path_1.default.join(__dirname, 'download.html')}` : `file://${path_1.default.join(__dirname, '../build/download.html')}`;
+    downloaderWindow = new DownloaderWindow_1.default(url);
+    downloaderWindow.on('closed', () => {
+        client.destroy(() => {
+            console.log("Client destroyed on window closed");
+            //@ts-ignore
+            client = null;
+        });
+        //@ts-ignore
+        downloaderWindow = null;
     });
 }
 electron_1.app.on('ready', () => {
