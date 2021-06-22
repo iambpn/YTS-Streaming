@@ -328,6 +328,22 @@ function createDownloaderWindow() {
 electron_1.app.on('ready', () => {
     createWindow();
 });
+electron_1.app.on('browser-window-focus', function () {
+    electron_1.globalShortcut.register("CommandOrControl+R", () => {
+        console.log("CommandOrControl+R is pressed: Shortcut Disabled");
+    });
+    electron_1.globalShortcut.register("F5", () => {
+        console.log("F5 is pressed: Shortcut Disabled");
+    });
+    electron_1.globalShortcut.register("CommandOrControl+Shift+I", () => {
+        console.log("Inspect Element: Shortcut Disabled");
+    });
+});
+electron_1.app.on('browser-window-blur', function () {
+    electron_1.globalShortcut.unregister('CommandOrControl+R');
+    electron_1.globalShortcut.unregister('F5');
+    electron_1.globalShortcut.unregister('CommandOrControl+Shift+I');
+});
 electron_1.app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         electron_1.app.quit();

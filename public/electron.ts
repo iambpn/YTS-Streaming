@@ -1,4 +1,4 @@
-import {app, BrowserWindow, dialog, ipcMain, shell} from "electron";
+import {app, dialog, globalShortcut, ipcMain, shell} from "electron";
 import isDev from "electron-is-dev";
 import windowStateKeeper from "electron-window-state";
 import path from "path";
@@ -366,6 +366,24 @@ function createDownloaderWindow() {
 
 app.on('ready', () => {
     createWindow();
+});
+
+app.on('browser-window-focus', function () {
+    globalShortcut.register("CommandOrControl+R", () => {
+        console.log("CommandOrControl+R is pressed: Shortcut Disabled");
+    });
+    globalShortcut.register("F5", () => {
+        console.log("F5 is pressed: Shortcut Disabled");
+    });
+    globalShortcut.register("CommandOrControl+Shift+I", () => {
+        console.log("Inspect Element: Shortcut Disabled");
+    });
+});
+
+app.on('browser-window-blur', function () {
+    globalShortcut.unregister('CommandOrControl+R');
+    globalShortcut.unregister('F5');
+    globalShortcut.unregister('CommandOrControl+Shift+I')
 });
 
 app.on('window-all-closed', () => {
