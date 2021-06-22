@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useContext} from "react";
+import React, {useContext, useEffect, useRef} from "react";
 import Filter from "./Filter";
 import {AppContext} from "../../store/AppContextProvider";
 
@@ -19,7 +19,7 @@ type SearchAndFilterBoxProps = {
 export default function SearchAndFilterBox(props: SearchAndFilterBoxProps) {
     //extracting data from context (AppContext)
     const context = useContext(AppContext);
-    const [searchInput,quality,genre,rating,sortBy] = [
+    const [searchInput, quality, genre, rating, sortBy] = [
         context.currentQueries.search,
         context.currentQueries.quality,
         context.currentQueries.genre,
@@ -27,12 +27,13 @@ export default function SearchAndFilterBox(props: SearchAndFilterBoxProps) {
         context.currentQueries.sortBy
     ];
 
-    const [updateSearchInput,updateQuality,updateGenre,updateRating,updateSortBy] = [
+    const [updateSearchInput, updateQuality, updateGenre, updateRating, updateSortBy, updatePageNumber] = [
         context.updateQueries.search,
         context.updateQueries.quality,
         context.updateQueries.genre,
         context.updateQueries.rating,
-        context.updateQueries.sortBy
+        context.updateQueries.sortBy,
+        context.updateCurrentPage
     ];
 
     let handleSearchInput = (e: React.FormEvent<HTMLInputElement>) => {
@@ -50,6 +51,7 @@ export default function SearchAndFilterBox(props: SearchAndFilterBoxProps) {
         updateGenre("All");
         updateRating("All");
         updateSortBy("date_added");
+        updatePageNumber("1");
     }
 
     let handleSearch = () => {
@@ -115,13 +117,13 @@ export default function SearchAndFilterBox(props: SearchAndFilterBoxProps) {
                 <div>
                     <div className="row justify-content-center mt-4">
                         <Filter label={"quality"} values={FilterTypes["quality"]} stateValue={quality}
-                                updateStateValue={updateQuality}/>
+                                updateStateValue={updateQuality} updatePageNumber={updatePageNumber}/>
                         <Filter label={"genre"} values={FilterTypes["genre"]} stateValue={genre}
-                                updateStateValue={updateGenre}/>
+                                updateStateValue={updateGenre} updatePageNumber={updatePageNumber}/>
                         <Filter label={"rating"} values={FilterTypes["rating"]} stateValue={rating}
-                                updateStateValue={updateRating}/>
+                                updateStateValue={updateRating} updatePageNumber={updatePageNumber}/>
                         <Filter label={"sort by"} values={FilterTypes["sort by"]} stateValue={sortBy}
-                                updateStateValue={updateSortBy}/>
+                                updateStateValue={updateSortBy} updatePageNumber={updatePageNumber}/>
                     </div>
                 </div>
             </div>
