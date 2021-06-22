@@ -1,6 +1,6 @@
-# YTS-Streaming
- YTS movie streaming is an electron app for windows platform. Through YTS-Streaming you can stream any movie available YTS movie website.
- YTS-Streaming uses the content from the official YST API v2. This app is simple to use with a minimalistic design. It is more or less like the original YST website with the ability to play the movie within the app.
+# YTS-Streaming v2.0 - Rewritter in ReactJS.
+ YTS-streaming is an electron app for windows platform. Through YTS-streaming you can stream any movie available YTS movie website.
+ YTS-Streaming uses the content from the official YST API v2. This app is simple to use with a minimalistic design. It is more or less like the original YST website with the ability to play the movie within the app and download the movies that are not supported by YTS player.
  
  ### Download App > [Link to Releases](https://github.com/mbpn1/YTS-Streaming/releases) Download latest release
  
@@ -9,6 +9,8 @@
  - Torrent streaming within the app
  - Built in player
  - Support for captions
+ - Support for downloading if not playable
+ - Support for playing external torrent link.
  
  ### Issues or Limitations
  - Not allowed to limit the bandwidth. i.e Will stream a movie in full bandwidth
@@ -25,15 +27,11 @@
 - Check package.json for more dependency
 
 ## Things to add:
-- Support for .mkv files / warning if torrent have .mkv file which can't be played
 - Support to see downloaded movies
 - Allowing user to copying downloaded movies directly form the app.
-- Allowing user to play any playable torrent magnet link.
 
 ## Near Future changes : 
-- Shifiting vanilla javascript and HTML code to REACT or VUE js.
 - Full Implementation of YTS API.
-- And More.....
 
 # Preview
 **Home**
@@ -41,4 +39,7 @@
   
 **Movie Player**
 ![image](https://user-images.githubusercontent.com/21078512/111864151-77e4b680-8987-11eb-9a9b-26ec228162a8.png)
+
+**Settings**
+
 
