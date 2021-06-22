@@ -112,7 +112,7 @@ function SettingModal(props: SettingsModalProps) {
                                     <div className={"col-1 text-center"}>
                                         <svg className={"btn-outline-success " + styles.playSvg}
                                              onClick={handlePlayExternalSrc} xlinkTitle={"Play"}>
-                                            <use xlinkHref="/public_assets/images/play-button.svg#Capa_1"></use>
+                                            <use xlinkHref="./public_assets/images/play-button.svg#Capa_1"></use>
                                         </svg>
                                     </div>
                                 </div>
