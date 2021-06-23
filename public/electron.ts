@@ -212,7 +212,7 @@ function downloadMovieInstead(hash: string, maxCon: number, previousPath: string
         })
     }
 
-    let downloadRes = dialog.showMessageBoxSync(mainWindow, {
+    let downloadOption = dialog.showMessageBoxSync(mainWindow, {
         type: "info",
         title: "Media content not supported by YTS Player",
         message: "Do you want to download it instead?",
@@ -224,7 +224,7 @@ function downloadMovieInstead(hash: string, maxCon: number, previousPath: string
     });
 
     let downloadPath: string[] | undefined = undefined;
-    if (downloadRes === 0) {
+    if (downloadOption === 0) {
         downloadPath = dialog.showOpenDialogSync({
             title: "Choose Download Location",
             properties: [
@@ -248,15 +248,15 @@ function downloadMovieInstead(hash: string, maxCon: number, previousPath: string
             downloaderWindow.close();
         })
 
-        ipcMain.on("download:pause", () => {
-            console.log("torrent Paused");
-            torrent.pause()
-        })
-
-        ipcMain.on("download:resume", () => {
-            console.log("torrent resumed");
-            torrent.resume();
-        })
+        // ipcMain.on("download:pause", () => {
+        //     console.log("torrent Paused");
+        //     torrent.pause()
+        // })
+        //
+        // ipcMain.on("download:resume", () => {
+        //     console.log("torrent resumed");
+        //     torrent.resume();
+        // })
 
         // every time torrent downloads
         torrent.on("download", (bytes) => {
@@ -353,9 +353,16 @@ function createDownloaderWindow() {
     let url = isDev ? `file://${path.join(__dirname, 'download.html')}` : `file://${path.join(__dirname, '../build/download.html')}`;
     downloaderWindow = new DownloaderWindow(url);
 
+    if (isDev) {
+        downloaderWindow.webContents.toggleDevTools();
+    }
+
     downloaderWindow.on('closed', () => {
         client.destroy(() => {
             console.log("Client destroyed on window closed")
+            ipcMain.removeAllListeners("download:stop")
+            // ipcMain.removeAllListeners("download:resume")
+            // ipcMain.removeAllListeners("download:pause")
             //@ts-ignore
             client = null;
         })

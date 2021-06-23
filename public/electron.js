@@ -194,7 +194,7 @@ function downloadMovieInstead(hash, maxCon, previousPath) {
         fs_1.default.rmdir(previousPath, { recursive: true }, () => {
         });
     }
-    let downloadRes = electron_1.dialog.showMessageBoxSync(mainWindow, {
+    let downloadOption = electron_1.dialog.showMessageBoxSync(mainWindow, {
         type: "info",
         title: "Media content not supported by YTS Player",
         message: "Do you want to download it instead?",
@@ -205,7 +205,7 @@ function downloadMovieInstead(hash, maxCon, previousPath) {
         noLink: true
     });
     let downloadPath = undefined;
-    if (downloadRes === 0) {
+    if (downloadOption === 0) {
         downloadPath = electron_1.dialog.showOpenDialogSync({
             title: "Choose Download Location",
             properties: [
@@ -225,14 +225,15 @@ function downloadMovieInstead(hash, maxCon, previousPath) {
         electron_1.ipcMain.on("download:stop", () => {
             downloaderWindow.close();
         });
-        electron_1.ipcMain.on("download:pause", () => {
-            console.log("torrent Paused");
-            torrent.pause();
-        });
-        electron_1.ipcMain.on("download:resume", () => {
-            console.log("torrent resumed");
-            torrent.resume();
-        });
+        // ipcMain.on("download:pause", () => {
+        //     console.log("torrent Paused");
+        //     torrent.pause()
+        // })
+        //
+        // ipcMain.on("download:resume", () => {
+        //     console.log("torrent resumed");
+        //     torrent.resume();
+        // })
         // every time torrent downloads
         torrent.on("download", (bytes) => {
             downloaderWindow.webContents.send("download:info", {
@@ -315,9 +316,15 @@ function createVideoPlayerWindow() {
 function createDownloaderWindow() {
     let url = electron_is_dev_1.default ? `file://${path_1.default.join(__dirname, 'download.html')}` : `file://${path_1.default.join(__dirname, '../build/download.html')}`;
     downloaderWindow = new DownloaderWindow_1.default(url);
+    if (electron_is_dev_1.default) {
+        downloaderWindow.webContents.toggleDevTools();
+    }
     downloaderWindow.on('closed', () => {
         client.destroy(() => {
             console.log("Client destroyed on window closed");
+            electron_1.ipcMain.removeAllListeners("download:stop");
+            // ipcMain.removeAllListeners("download:resume")
+            // ipcMain.removeAllListeners("download:pause")
             //@ts-ignore
             client = null;
         });
