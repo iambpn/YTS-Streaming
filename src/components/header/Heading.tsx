@@ -13,10 +13,10 @@ export default function Heading(props: any) {
     return (
         <div className="border-bottom border-secondary">
             <div className="container">
-                <div className="m-3">
+                <div className="m-2">
                     {
                         showBackBtn &&
-                        (<div className="float-start mt-2">
+                        (<div className="float-start mt-3">
                             <span className="btn btn-outline-success" onClick={handleBack}>
                                 &larr; Back
                             </span>
@@ -24,7 +24,7 @@ export default function Heading(props: any) {
 
                     }
                     <nav className="navbar navbar-dark bg-dark justify-content-center border-0">
-                        <img src="./public_assets/images/logo-YTS.svg" alt="Logo" className="d-inline-block align-top"/>
+                        <img src="./public_assets/images/logo_final.png" alt="Logo" className="d-inline-block align-top"/>
                     </nav>
                     <div className="position-absolute" style={{top: "27px", right: "150px"}}>
                         {/*Setting Icon*/}
