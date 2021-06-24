@@ -1,4 +1,4 @@
-# YTS-Streaming v2.0 - Rewritter in ReactJS.
+# YTS-Streaming v2.0 - Rewritten in ReactJS.
  YTS-streaming is an electron app for windows platform. Through YTS-streaming you can stream any movie available YTS movie website.
  YTS-Streaming uses the content from the official YST API v2. This app is simple to use with a minimalistic design. It is more or less like the original YST website with the ability to play the movie within the app and download the movies that are not supported by YTS player.
  
@@ -35,11 +35,14 @@
 
 # Preview
 **Home**
-![image](https://user-images.githubusercontent.com/21078512/111864077-14f31f80-8987-11eb-99dc-8eb02d10b86a.png)
+![image](https://user-images.githubusercontent.com/21078512/123229175-c7420200-d4f5-11eb-90da-39dd3a09bad0.png)
+
   
 **Movie Player**
 ![image](https://user-images.githubusercontent.com/21078512/111864151-77e4b680-8987-11eb-9a9b-26ec228162a8.png)
 
-**Settings**
+
+**Settings**  
+![image](https://user-images.githubusercontent.com/21078512/123229296-dfb21c80-d4f5-11eb-9a5f-57e51465294b.png)
 
 
