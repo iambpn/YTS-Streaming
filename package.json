@@ -27,7 +27,7 @@
     "watch-tsc-public": "tsc --watch --project public",
     "electron": "electron .",
     "electron-dev": "concurrently \"npm run watch-tsc-public\" \"npm start\" \"wait-on http://localhost:3000 && npm run electron\"",
-    "electron-pack": "electron-builder build --em.main=build/electron.js",
+    "electron-pack": "electron-builder build",
     "preelectron-pack": "npm run build"
   },
   "build": {
