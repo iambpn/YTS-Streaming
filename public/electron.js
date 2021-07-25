@@ -164,15 +164,33 @@ electron_1.ipcMain.on("video:play", (event, data) => {
         }
         //if torrent error occurs
         torrent.on('error', function (err) {
+            client.destroy(() => {
+                console.log("Client destroyed due torrent error.");
+                //@ts-ignore
+                client = null;
+            });
             electron_1.dialog.showErrorBox('Torrent Error', err.toString());
         });
         // if no peers in torrent
         torrent.on('noPeers', function (announceType) {
+            client.destroy(() => {
+                console.log("Client destroyed due to no peers or network issue.");
+                //@ts-ignore
+                client = null;
+            });
             electron_1.dialog.showErrorBox('Torrent Warning', 'No peers available to stream.');
         });
     });
     // error in torrent client
     client.on("error", (err) => {
+        if (client) {
+            client.destroy(() => {
+                console.log("Client destroyed due to Torrent client error.");
+                console.log(err.toString());
+                //@ts-ignore
+                client = null;
+            });
+        }
         electron_1.dialog.showErrorBox("Torrent Client Error", err.toString());
     });
 });
