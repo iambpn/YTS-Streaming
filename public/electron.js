@@ -46,6 +46,22 @@ electron_1.ipcMain.on("Cache:ShowSpaceRequest", (event, data) => {
         event.sender.send("Cache:ShowSpaceResponse", `0 folder are in cache.`);
     }
 });
+const captionConf = path_1.default.join(__dirname, "electron_app", ".CaptionConf");
+const defaultCaptionFont = { "fontSize": { "small": 13, "medium": 15, "large": 21 } };
+electron_1.ipcMain.on("style:caption", (event, args) => {
+    if (args.type === "get") {
+        try {
+            let data = JSON.parse(fs_1.default.readFileSync(captionConf).toString());
+            event.reply("get:style:caption", data);
+        }
+        catch (_a) {
+            fs_1.default.writeFileSync(captionConf, JSON.stringify(defaultCaptionFont));
+        }
+    }
+    else if (args.type === "save") {
+        fs_1.default.writeFileSync(captionConf, JSON.stringify(args.data));
+    }
+});
 electron_1.ipcMain.on("video:play", (event, data) => {
     if (server != null || client != null) {
         electron_1.dialog.showErrorBox("Movie player or Downloader is already running", "An instance of Movie Player | Downloader is already running. Please close the existing  or downloader window and try again.");
@@ -64,6 +80,15 @@ electron_1.ipcMain.on("video:play", (event, data) => {
     });
     app.get("/streaming", function (req, res) {
         res.sendFile(path_1.default.join(__dirname, "video.html"));
+    });
+    app.get("/custom-caption", function (req, res) {
+        try {
+            let data = JSON.parse(fs_1.default.readFileSync(captionConf).toString());
+            res.json(data);
+        }
+        catch (_a) {
+            res.json(defaultCaptionFont);
+        }
     });
     // hosting files end
     let maxCon = data.maxCon !== null ? Number(data.maxCon) : 55;
@@ -201,10 +226,12 @@ function closeServerAndClient() {
         //@ts-ignore
         server = null;
     });
-    client.destroy(() => {
-        //@ts-ignore
-        client = null;
-    });
+    if (client) {
+        client.destroy(() => {
+            //@ts-ignore
+            client = null;
+        });
+    }
 }
 function downloadMovieInstead(hash, maxCon, previousPath) {
     // delete previous path

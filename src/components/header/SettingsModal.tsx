@@ -2,9 +2,20 @@ import React, {useEffect, useState} from "react";
 import BackDrop from "../backdrop/BackDrop";
 import package_json from "../../../package.json";
 import styles from "./SettingsModal.module.scss";
+import CustomCaption from "./CustomCaption";
+import {type} from "os";
 
 type SettingsModalProps = {
     openSettings: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+export type CaptionStyleType = {
+    fontSize: {
+        [key: string]: number,
+        small: number,
+        medium: number,
+        large: number
+    }
 }
 
 function getMaxConSettings(): string | null {
@@ -15,12 +26,27 @@ function SettingModal(props: SettingsModalProps) {
     const [maxCon, updateMaxCon] = useState<number>(55);
     const [cachedSpaceTitle, updateCachedSpaceTitle] = useState<string>("");
     const [torrentLink, updateTorrentLink] = useState<string>("");
+    const [isSubtitleExpand, updateIsSubtitleExpand] = useState<boolean>(false);
+    const [captionStyle, updateCaptionStyle] = useState<CaptionStyleType>({
+        fontSize: {
+            small: 13,
+            medium: 15,
+            large: 21
+        }
+    });
 
     useEffect(() => {
         let maxCon = localStorage.getItem("MaxCon");
         if (maxCon !== null) {
             updateMaxCon(Number(maxCon))
         }
+
+        // @ts-ignore ** fetch  caption style data**
+        window.api.send("style:caption", {type: "get"});
+        // @ts-ignore
+        window.api.receive("get:style:caption", (args: CaptionStyleType) => {
+            updateCaptionStyle(args);
+        });
     }, [])
 
     let handleMaxConChange = (e: React.FormEvent<HTMLInputElement>) => {
@@ -34,6 +60,12 @@ function SettingModal(props: SettingsModalProps) {
     let handleCloseModal = () => {
         props.openSettings(false);
         localStorage.setItem("MaxCon", String(maxCon));
+
+        //@ts-ignore
+        window.api.send("style:caption", {
+            type: "save",
+            data: captionStyle
+        })
     }
 
     let handleOpenLink = (link: string) => {
@@ -68,12 +100,22 @@ function SettingModal(props: SettingsModalProps) {
         }
     }
 
+    let handleSubtitleExpand = () => {
+        updateIsSubtitleExpand(!isSubtitleExpand);
+    };
+
+    let handleFontSizeValue = (position: string, value: number) => {
+        const temp = {...captionStyle};
+        temp.fontSize[position.toLowerCase()] = value;
+        updateCaptionStyle(temp);
+    }
+
     return (
         <React.Fragment>
             <BackDrop onClick={handleCloseModal}/>
             <div className={styles.modal}>
                 <div className={"modal-dialog"} style={{margin: "0", maxWidth: "inherit"}}>
-                    <div className="modal-content">
+                    <div className="modal-content scrollbar" style={{maxHeight: "87vh", overflowY: "auto"}}>
                         <div className="modal-header border-secondary">
                             <div className={"w-100 text-center"}>
                                 <h5 className={"modal-title"}>YST Settings V.{package_json.version}</h5>
@@ -117,6 +159,24 @@ function SettingModal(props: SettingsModalProps) {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <div className="modal-body border-top border-secondary">
+                            <div className={"d-flex justify-content-between " + styles.captionStyle}
+                                 onClick={handleSubtitleExpand}>
+                                <label htmlFor="">Subtitle/CC</label>
+                                <p dangerouslySetInnerHTML={{__html: isSubtitleExpand ? "&#9650" : "&#9660"}}/>
+                            </div>
+                            {isSubtitleExpand &&
+                            <div className={"d-flex flex-column justify-content-center"}>
+                                <p>Customize caption based of screen size: (Re-open player window to see the changes)</p>
+                                <CustomCaption label={"Small"} initialValue={captionStyle.fontSize.small}
+                                               handleFontSizeValue={handleFontSizeValue}/>
+                                <CustomCaption label={"Medium"} initialValue={captionStyle.fontSize.medium}
+                                               handleFontSizeValue={handleFontSizeValue}/>
+                                <CustomCaption label={"Large"} initialValue={captionStyle.fontSize.large}
+                                               handleFontSizeValue={handleFontSizeValue}/>
+                            </div>
+                            }
                         </div>
                         <div className="modal-body border-top border-secondary">
                             <div className="d-flex justify-content-evenly">

@@ -46,6 +46,26 @@ ipcMain.on("Cache:ShowSpaceRequest", (event, data: null) => {
     }
 })
 
+type captionData = {
+    type: string,
+    data?: any
+}
+const captionConf = path.join(__dirname, "electron_app", ".CaptionConf");
+const defaultCaptionFont = {"fontSize": {"small": 13, "medium": 15, "large": 21}};
+
+ipcMain.on("style:caption", (event, args: captionData) => {
+    if (args.type === "get") {
+        try {
+            let data = JSON.parse(fs.readFileSync(captionConf).toString());
+            event.reply("get:style:caption", data);
+        } catch {
+            fs.writeFileSync(captionConf, JSON.stringify(defaultCaptionFont));
+        }
+    } else if (args.type === "save") {
+        fs.writeFileSync(captionConf, JSON.stringify(args.data));
+    }
+})
+
 type videoPlayData = {
     hash: string,
     title?: string,
@@ -74,6 +94,15 @@ ipcMain.on("video:play", (event, data: videoPlayData) => {
 
     app.get("/streaming", function (req, res) {
         res.sendFile(path.join(__dirname, "video.html"));
+    });
+
+    app.get("/custom-caption", function (req, res) {
+        try {
+            let data = JSON.parse(fs.readFileSync(captionConf).toString());
+            res.json(data);
+        } catch {
+            res.json(defaultCaptionFont);
+        }
     });
     // hosting files end
 
@@ -154,7 +183,7 @@ ipcMain.on("video:play", (event, data: videoPlayData) => {
             });
 
             // downloadInfo api
-            app.get("/downloadInfo",(req,res)=>{
+            app.get("/downloadInfo", (req, res) => {
                 res.json({'total_downloaded': torrent.downloaded, 'total_size': torrent.length})
             });
 
@@ -165,7 +194,7 @@ ipcMain.on("video:play", (event, data: videoPlayData) => {
 
             //get Title api
             app.get("/title", (req, res) => {
-                res.json({'title': data.title === undefined ? "YTS-Player" : "YTS-Player - "+data.title})
+                res.json({'title': data.title === undefined ? "YTS-Player" : "YTS-Player - " + data.title})
             });
 
             // start server
@@ -198,7 +227,7 @@ ipcMain.on("video:play", (event, data: videoPlayData) => {
 
     // error in torrent client
     client.on("error", (err) => {
-        if(client){
+        if (client) {
             client.destroy(() => {
                 console.log("Client destroyed due to Torrent client error.");
                 console.log(err.toString());
@@ -217,10 +246,12 @@ function closeServerAndClient() {
         //@ts-ignore
         server = null;
     })
-    client.destroy(() => {
-        //@ts-ignore
-        client = null;
-    });
+    if (client) {
+        client.destroy(() => {
+            //@ts-ignore
+            client = null;
+        });
+    }
 }
 
 function downloadMovieInstead(hash: string, maxCon: number, previousPath: string) {
