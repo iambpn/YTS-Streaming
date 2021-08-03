@@ -45,9 +45,9 @@
       "target": "nsis"
     },
     "nsis": {
-      "oneClick": false,
-      "perMachine": true,
-      "allowToChangeInstallationDirectory": true,
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
       "deleteAppDataOnUninstall": true,
       "allowElevation": true,
       "include": "assets/installerMacro.nsh",
