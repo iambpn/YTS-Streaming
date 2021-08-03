@@ -46,7 +46,7 @@ electron_1.ipcMain.on("Cache:ShowSpaceRequest", (event, data) => {
         event.sender.send("Cache:ShowSpaceResponse", `0 folder are in cache.`);
     }
 });
-const captionConf = path_1.default.join(__dirname, "electron_app", ".CaptionConf");
+const captionConf = path_1.default.join(process.cwd(), ".CaptionConf");
 const defaultCaptionFont = { "fontSize": { "small": 13, "medium": 15, "large": 21 } };
 electron_1.ipcMain.on("style:caption", (event, args) => {
     if (args.type === "get") {
