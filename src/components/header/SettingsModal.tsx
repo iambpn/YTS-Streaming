@@ -169,10 +169,11 @@ function SettingModal(props: SettingsModalProps) {
                             {isSubtitleExpand &&
                             <div className={"d-flex flex-column justify-content-center"}>
                                 <p>Customize caption based of screen size: (Re-open player window to see the changes)</p>
-                                <CustomCaption label={"Small"} initialValue={captionStyle.fontSize.small}
-                                               handleFontSizeValue={handleFontSizeValue}/>
-                                <CustomCaption label={"Medium"} initialValue={captionStyle.fontSize.medium}
-                                               handleFontSizeValue={handleFontSizeValue}/>
+                                {/*Small and Medium are not required as of now*/}
+                                {/*<CustomCaption label={"Small"} initialValue={captionStyle.fontSize.small}*/}
+                                {/*               handleFontSizeValue={handleFontSizeValue}/>*/}
+                                {/*<CustomCaption label={"Medium"} initialValue={captionStyle.fontSize.medium}*/}
+                                {/*               handleFontSizeValue={handleFontSizeValue}/>*/}
                                 <CustomCaption label={"Large"} initialValue={captionStyle.fontSize.large}
                                                handleFontSizeValue={handleFontSizeValue}/>
                             </div>
