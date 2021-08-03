@@ -15,10 +15,10 @@ export default function CustomCaption(props: Props): JSX.Element {
     }
 
     return (
-        <div className={"d-flex justify-content-between flex-wrap align-items-center"}>
+        <div className={"d-flex justify-content-between flex-wrap align-items-center mb-2"}>
             <label htmlFor="setCaption">{props.label}</label>
             <p style={{background: "black", maxHeight: "150px", fontSize: fontSize}}
-               className={"text-center w-50 flex-wrap py-1 overflow-hidden"}>AaBbCcDd</p>
+               className={"text-center w-50 flex-wrap py-1 overflow-hidden m-0"}>AaBbCcDd</p>
             <input type="number" id={"setCaption"} style={{width: "13%"}} placeholder={"px"}
                    onChange={handleInputChange} value={fontSize}/>
         </div>
