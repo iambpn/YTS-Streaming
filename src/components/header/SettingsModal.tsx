@@ -26,6 +26,7 @@ function SettingModal(props: SettingsModalProps) {
     const [maxCon, updateMaxCon] = useState<number>(55);
     const [cachedSpaceTitle, updateCachedSpaceTitle] = useState<string>("");
     const [torrentLink, updateTorrentLink] = useState<string>("");
+    const [playing,setPlaying] = useState<boolean>(false);
     const [isSubtitleExpand, updateIsSubtitleExpand] = useState<boolean>(false);
     const [captionStyle, updateCaptionStyle] = useState<CaptionStyleType>({
         fontSize: {
@@ -89,13 +90,15 @@ function SettingModal(props: SettingsModalProps) {
         });
     }
 
-    let handlePlayExternalSrc = () => {
+    let handlePlayExternalSrc = async () => {
         if (torrentLink.trim() !== "") {
+            setPlaying(true);
             // @ts-ignore
-            window.api.send("video:play", {
+            await window.api.invoke("video:play", {
                 hash: torrentLink,
                 maxCon: maxCon,
             })
+            setPlaying(false);
             handleCloseModal();
         }
     }
@@ -137,7 +140,7 @@ function SettingModal(props: SettingsModalProps) {
                         </div>
                         <div className="modal-body border-top border-secondary">
                             <div>
-                                <label htmlFor={"magnetLink"}>Play from External Source:</label>
+                                <label htmlFor={"magnetLink"}>Play from External Source: {playing?"Opening Player...":""}</label>
                                 <div className={"row g-2 align-items-end"}>
                                     <div className="col-11">
                                         <input type="text" className="form-control mt-2" id="magnetLink"
