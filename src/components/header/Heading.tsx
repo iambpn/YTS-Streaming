@@ -1,13 +1,23 @@
-import React from "react";
+import React, {useContext} from "react";
 import SettingIcon from "./SettingIcon";
-import {useLocation, useHistory} from "react-router-dom";
+import {useLocation, useHistory, Link} from "react-router-dom";
+import {AppContext,defaultQueries} from "../../store/AppContextProvider";
 
 export default function Heading(props: any) {
     let showBackBtn = useLocation().pathname !== "/";
     let history = useHistory();
+    let context = useContext(AppContext);
 
     let handleBack = ()=>{
         history.goBack();
+    }
+
+    let handleGoHome=()=>{
+        context.updateQueries.search(defaultQueries.search);
+        context.updateQueries.quality(defaultQueries.quality);
+        context.updateQueries.genre(defaultQueries.genre);
+        context.updateQueries.rating(defaultQueries.rating);
+        context.updateQueries.sortBy(defaultQueries.sortBy);
     }
 
     return (
@@ -24,7 +34,9 @@ export default function Heading(props: any) {
 
                     }
                     <nav className="navbar navbar-dark bg-dark justify-content-center border-0">
-                        <img src="./public_assets/images/logo_final.png" alt="Logo" className="d-inline-block align-top"/>
+                        <Link to="/" onClick={handleGoHome}>
+                            <img src="./public_assets/images/logo_final.png" alt="Logo" className="d-inline-block align-top"/>
+                        </Link>
                     </nav>
                     <div className="position-absolute" style={{top: "27px", right: "150px"}}>
                         {/*Setting Icon*/}
