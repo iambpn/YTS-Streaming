@@ -37,7 +37,7 @@
         </div>
 
         <!--    left override-->
-        <div style="position: absolute; top: 10px; right: 10px;">
+        <div style="position: absolute; top: 10px; right: 10px;" class="text-end">
             <div id="show_speed" class="d-inline-block align-middle" style="font-size: 16px;">
                 <span class="pr-1"><span id="up_speed">0</span> &uarr;M</span>
                 <span>/</span>
@@ -54,6 +54,9 @@
                 </svg>
                 <span>Add Subtitle</span>
             </div>
+            <div style="font-size: 14px;" class="mt-1" id="location">
+                <span id="download_location"></span>
+            </div>
         </div>
         <div style="display: none;">
             <input type="file" id="select_subtitle" accept=".srt,.vtt"/>
@@ -66,12 +69,14 @@
             document.getElementsByTagName("video")[0].addEventListener("play", (event) => {
                 document.getElementById("choose_subtitle").style.display = "none";
                 document.getElementById("download_status").style.display = "none";
+                document.getElementById("location").style.display = "none";
                 document.getElementById("show_speed").style.fontSize = "14px";
                 document.getElementById("show_download_info").style.fontSize = "14px";
             });
             document.getElementsByTagName("video")[0].addEventListener("pause", (event) => {
                 document.getElementById("choose_subtitle").style.display = "inline-block";
                 document.getElementById("download_status").style.display = "block";
+                document.getElementById("location").style.display = "block";
                 document.getElementById("show_speed").style.fontSize = "16px";
                 document.getElementById("show_download_info").style.fontSize = "16px";
             });
@@ -183,6 +188,7 @@
                             data.total_downloaded = data.total_downloaded.slice(0, (data.total_downloaded.indexOf(".")) + 4)
                             data.total_size = (data.total_size / (1000 ** 3)).toString();
                             data.total_size = data.total_size.slice(0, (data.total_size.indexOf(".")) + 4)
+                            document.getElementById("download_location").innerText=`Saved at: ${data.path}`;
                             document.getElementById("total_downloaded").innerHTML = data.total_downloaded;
                             document.getElementById("total_size").innerHTML = data.total_size;
 
