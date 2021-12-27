@@ -23,15 +23,16 @@ type IContext = {
     currentPage:string,
     updateCurrentPage:Function
 };
+const defaultQueries = {
+    search: "",
+    quality: "All",
+    genre: "All",
+    rating: "All",
+    sortBy: "date_added"
+}
 
 const AppContext = createContext<IContext>({
-    currentQueries: {
-        search: "",
-        quality: "All",
-        genre: "All",
-        rating: "All",
-        sortBy: "date_added"
-    },
+    currentQueries: defaultQueries,
     updateQueries: {
         search: Function,
         quality: Function,
@@ -85,4 +86,4 @@ export default function AppContextProvider(props: { children: React.ReactNode })
 
 }
 
-export {AppContext, AppContextProvider};
+export {AppContext, AppContextProvider, defaultQueries};
