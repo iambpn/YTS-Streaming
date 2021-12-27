@@ -51,5 +51,5 @@
 
 
 **Settings**  
-*Movies you watched were downloaded in `%temp%/webtorrent/` so, it's good to clear cache from time to time to free up those spaces. You can also copy the fully downloaded movie from the temp folder. To clear cache, there is a clear cache button within the app settings.*  
+*Movies you watched were downloaded in `%temp%/webtorrent/` or `c:/tmp` folder so, it's good to clear cache to free up space. You can also copy the fully downloaded movie from the temp folder. To clear cache, there is a clear cache button within the app settings.*  
 ![image](https://user-images.githubusercontent.com/21078512/128048518-6eb08780-9421-4fe9-b16d-f574fc47ec34.png)
