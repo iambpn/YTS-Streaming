@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import "./MovieIntro.scss";
 import {useHistory} from "react-router-dom";
 import {getMaxConSettings} from "../header/SettingsModal";
@@ -10,15 +10,18 @@ type MovieIntroProps = {
 
 export default function MovieIntro(props: MovieIntroProps) {
     const history = useHistory();
+    const [playing,setPlaying] = useState<boolean>(false);
 
-    let handleClickOnLink = (hash: string) => {
+    let handleClickOnLink = async (hash: string) => {
+        setPlaying(true);
         let maxCon = getMaxConSettings();
         //@ts-ignore
-        window.api.send("video:play", {
+        await window.api.invoke("video:play", {
             hash,
             title: props.movie.title,
             maxCon
         })
+        setPlaying(false);
     }
 
     let downloadSubtitle = () => {
@@ -28,13 +31,16 @@ export default function MovieIntro(props: MovieIntroProps) {
 
     let links = []
     for (let torrent of props.movie.torrents) {
-        let button = (<button title={"Watch " + props.movie.title + " in " + torrent.quality + " Torrent"}
-                              className="btn btn-secondary border-dark ms-1 me-2 mb-2" onClick={
-                (e) => {
-                    handleClickOnLink(torrent.hash)
-                }} key={torrent.hash}>
-                {torrent.quality + "." + torrent.type}
-            </button>
+        let button = (
+          <button title={"Watch " + props.movie.title + " in " + torrent.quality + " Torrent"}
+                  className="btn btn-secondary border-dark ms-1 me-2 mb-2"
+                  onClick={
+                      (e) => {
+                          handleClickOnLink(torrent.hash)
+                      }
+                  } key={torrent.hash}>
+              {torrent.quality + "." + torrent.type}
+          </button>
         );
 
         links.push(button);
@@ -74,7 +80,7 @@ export default function MovieIntro(props: MovieIntroProps) {
                         <h2>{props.movie.genres.toString()}</h2>
                     </div>
                     <div className="mt-4 mb-4">
-                        <em className="text-white align-middle" style={{fontSize: "1.1em"}}>Available in: </em>
+                        <em className="text-white align-middle" style={{fontSize: "1.1em"}}>Available in: {playing?"Opening Player...":""} </em>
                         {links}
                     </div>
                     <div className={"mb-4"}>
