@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -34,10 +43,19 @@ electron_1.ipcMain.on("Cache:ClearCache", (event, data) => {
         fs_1.default.rmdir(dir, { recursive: true }, () => {
         });
     }
+    else if (fs_1.default.existsSync("C:\\tmp")) {
+        fs_1.default.rmdir("C:\\tmp", { recursive: true }, () => {
+        });
+    }
 });
 electron_1.ipcMain.on("Cache:ShowSpaceRequest", (event, data) => {
     let dir = path_1.default.join(os_1.default.tmpdir(), 'webtorrent');
     if (fs_1.default.existsSync(dir)) {
+        fs_1.default.readdir(dir, (err, files) => {
+            event.sender.send("Cache:ShowSpaceResponse", `${files.length} folder are in cache. About ${files.length * 500} MB data`);
+        });
+    }
+    else if (fs_1.default.existsSync("C:\\tmp")) {
         fs_1.default.readdir(dir, (err, files) => {
             event.sender.send("Cache:ShowSpaceResponse", `${files.length} folder are in cache. About ${files.length * 500} MB data`);
         });
@@ -62,7 +80,7 @@ electron_1.ipcMain.on("style:caption", (event, args) => {
         fs_1.default.writeFileSync(captionConf, JSON.stringify(args.data));
     }
 });
-electron_1.ipcMain.on("video:play", (event, data) => {
+electron_1.ipcMain.handle("video:play", (event, data) => __awaiter(void 0, void 0, void 0, function* () {
     if (server != null || client != null) {
         electron_1.dialog.showErrorBox("Movie player or Downloader is already running", "An instance of Movie Player | Downloader is already running. Please close the existing  or downloader window and try again.");
         return;
@@ -93,118 +111,121 @@ electron_1.ipcMain.on("video:play", (event, data) => {
     // hosting files end
     let maxCon = data.maxCon !== null ? Number(data.maxCon) : 55;
     client = new webtorrent_1.default({ maxConns: maxCon });
-    client.add(data.hash, {}, (torrent) => {
-        let files = torrent.files.sort();
-        let videoFile = files.find(function (file) {
-            return file.name.endsWith(".mp4");
+    let torrent = yield new Promise((resolve, reject) => {
+        client.add(data.hash, {}, (torrent) => {
+            resolve(torrent);
         });
-        if (videoFile === undefined) {
-            client.destroy(() => {
-                console.log("Client destroyed before download Movie");
-                //@ts-ignore
-                client = null;
-                downloadMovieInstead(data.hash, maxCon, torrent.path);
-            });
-            return;
-        }
-        else {
-            // host video file
-            app.get("/video", function (req, res) {
-                const fileSize = videoFile.length;
-                const range = req.headers.range;
-                if (range) {
-                    const parts = range.replace(/bytes=/, "").split("-");
-                    const start = parseInt(parts[0], 10);
-                    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-                    const chunkSize = end - start + 1;
-                    const stream = videoFile.createReadStream({ start, end });
-                    const head = {
-                        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
-                        "Accept-Ranges": "bytes",
-                        "Content-Length": chunkSize,
-                        "Content-Type": "video/mp4",
-                    };
-                    res.writeHead(206, head);
-                    stream.pipe(res);
-                }
-                else {
-                    const head = {
-                        "Content-Length": fileSize,
-                        "Content-Type": "video/mp4",
-                    };
-                    res.writeHead(200, head);
-                    videoFile.createReadStream().pipe(res);
-                }
-            });
-            //subtitle api
-            app.get('/subtitleApi/add', (req, res) => {
-                try {
-                    if (req.query.path) {
-                        //@ts-ignore
-                        let path_query = req.query.path;
-                        let subtitle_path = path_query.split('.');
-                        if (subtitle_path[subtitle_path.length - 1] === 'srt') {
-                            let srtData = fs_1.default.readFileSync(path_query);
-                            let newPath = path_1.default.join(torrent.path, "/", 'customCaption.vtt');
-                            srt2vtt_1.default(srtData, function (err, vttData) {
-                                if (err)
-                                    throw new Error(err);
-                                fs_1.default.writeFileSync(newPath, vttData);
-                                fs_1.default.createReadStream(newPath).pipe(res);
-                            });
-                        }
-                        else if (subtitle_path[subtitle_path.length - 1] === 'vtt') {
-                            fs_1.default.createReadStream(path_query).pipe(res);
-                        }
-                        else {
-                            throw new Error("Subtitle MIME type not supported. Should be .srt or .vtt");
-                        }
+    });
+    let files = torrent.files.sort();
+    let videoFile = files.find(function (file) {
+        return file.name.endsWith(".mp4");
+    });
+    if (videoFile === undefined) {
+        client.destroy(() => {
+            console.log("Client destroyed before downloading Movie");
+            //@ts-ignore
+            client = null;
+            downloadMovieInstead(data.hash, maxCon, torrent.path);
+        });
+        return;
+    }
+    else {
+        // host video file
+        app.get("/video", function (req, res) {
+            const fileSize = videoFile.length;
+            const range = req.headers.range;
+            if (range) {
+                const parts = range.replace(/bytes=/, "").split("-");
+                const start = parseInt(parts[0], 10);
+                const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+                const chunkSize = end - start + 1;
+                const stream = videoFile.createReadStream({ start, end });
+                const head = {
+                    "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+                    "Accept-Ranges": "bytes",
+                    "Content-Length": chunkSize,
+                    "Content-Type": "video/mp4",
+                };
+                res.writeHead(206, head);
+                stream.pipe(res);
+            }
+            else {
+                const head = {
+                    "Content-Length": fileSize,
+                    "Content-Type": "video/mp4",
+                };
+                res.writeHead(200, head);
+                videoFile.createReadStream().pipe(res);
+            }
+        });
+        //subtitle api
+        app.get('/subtitleApi/add', (req, res) => {
+            try {
+                if (req.query.path) {
+                    //@ts-ignore
+                    let path_query = req.query.path;
+                    let subtitle_path = path_query.split('.');
+                    if (subtitle_path[subtitle_path.length - 1] === 'srt') {
+                        let srtData = fs_1.default.readFileSync(path_query);
+                        let newPath = path_1.default.join(torrent.path, "/", 'customCaption.vtt');
+                        srt2vtt_1.default(srtData, function (err, vttData) {
+                            if (err)
+                                throw new Error(err);
+                            fs_1.default.writeFileSync(newPath, vttData);
+                            fs_1.default.createReadStream(newPath).pipe(res);
+                        });
+                    }
+                    else if (subtitle_path[subtitle_path.length - 1] === 'vtt') {
+                        fs_1.default.createReadStream(path_query).pipe(res);
                     }
                     else {
-                        throw new Error("Subtitle path not found");
+                        throw new Error("Subtitle MIME type not supported. Should be .srt or .vtt");
                     }
                 }
-                catch (err) {
-                    electron_1.dialog.showErrorBox("Error while adding subtitle", err.toString());
-                    res.sendStatus(400);
+                else {
+                    throw new Error("Subtitle path not found");
                 }
-            });
-            // downloadInfo api
-            app.get("/downloadInfo", (req, res) => {
-                res.json({ 'total_downloaded': torrent.downloaded, 'total_size': torrent.length });
-            });
-            //speed api
-            app.get("/speed", (req, res) => {
-                res.json({ 'up': torrent.uploadSpeed, 'down': torrent.downloadSpeed });
-            });
-            //get Title api
-            app.get("/title", (req, res) => {
-                res.json({ 'title': data.title === undefined ? "YTS-Player" : "YTS-Player - " + data.title });
-            });
-            // start server
-            server = app.listen(9000, 'localhost', () => {
-                console.log("server ready");
-                createVideoPlayerWindow();
-            });
-        }
-        //if torrent error occurs
-        torrent.on('error', function (err) {
-            client.destroy(() => {
-                console.log("Client destroyed due torrent error.");
-                //@ts-ignore
-                client = null;
-            });
-            electron_1.dialog.showErrorBox('Torrent Error', err.toString());
+            }
+            catch (err) {
+                electron_1.dialog.showErrorBox("Error while adding subtitle", err.toString());
+                res.sendStatus(400);
+            }
         });
-        // if no peers in torrent
-        torrent.on('noPeers', function (announceType) {
-            client.destroy(() => {
-                console.log("Client destroyed due to no peers or network issue.");
-                //@ts-ignore
-                client = null;
-            });
-            electron_1.dialog.showErrorBox('Torrent Warning', 'No peers available to stream.');
+        // downloadInfo api
+        app.get("/downloadInfo", (req, res) => {
+            res.json({ 'total_downloaded': torrent.downloaded, 'total_size': torrent.length, 'path': torrent.path });
         });
+        //speed api
+        app.get("/speed", (req, res) => {
+            res.json({ 'up': torrent.uploadSpeed, 'down': torrent.downloadSpeed });
+        });
+        //get Title api
+        app.get("/title", (req, res) => {
+            res.json({ 'title': data.title === undefined ? "YTS-Player" : "YTS-Player - " + data.title });
+        });
+        // start server
+        server = app.listen(9000, 'localhost', () => {
+            console.log("server ready");
+            createVideoPlayerWindow();
+        });
+    }
+    //if torrent error occurs
+    torrent.on('error', function (err) {
+        client.destroy(() => {
+            console.log("Client destroyed due torrent error.");
+            //@ts-ignore
+            client = null;
+        });
+        electron_1.dialog.showErrorBox('Torrent Error', err.toString());
+    });
+    // if no peers in torrent
+    torrent.on('noPeers', function (announceType) {
+        client.destroy(() => {
+            console.log("Client destroyed due to no peers or network issue.");
+            //@ts-ignore
+            client = null;
+        });
+        electron_1.dialog.showErrorBox('Torrent Warning', 'No peers available to stream.');
     });
     // error in torrent client
     client.on("error", (err) => {
@@ -218,7 +239,7 @@ electron_1.ipcMain.on("video:play", (event, data) => {
         }
         electron_1.dialog.showErrorBox("Torrent Client Error", err.toString());
     });
-});
+}));
 function closeServerAndClient() {
     //@ts-ignore
     server.close(() => {
