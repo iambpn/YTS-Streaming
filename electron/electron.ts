@@ -31,24 +31,22 @@ interface videoPlayData {
 
 /* Paths */
 const ROOT_PATH = process.cwd();
+const DIR_NAME = __dirname;
 const PLYR_JS_PATH = path.join(
-  ROOT_PATH,
-  'electron/assets/express/video_player/plyr3.6.8.polyfilled.min.js'
+  DIR_NAME,
+  'assets/express/video_player/plyr3.6.8.polyfilled.min.js'
 );
 const PLYR_CSS_PATH = path.join(
-  ROOT_PATH,
-  'electron/assets/express/video_player/plyr3.6.8.min.css'
+  DIR_NAME,
+  'assets/express/video_player/plyr3.6.8.min.css'
 );
 const BOOTSTRAP_PATH = path.join(
-  ROOT_PATH,
-  'electron/assets/common/bootstrap/bootstrap.min.css'
+  DIR_NAME,
+  'assets/common/bootstrap/bootstrap.min.css'
 );
-const VIDEO_HTML_PATH = path.join(ROOT_PATH, 'electron/views/video.html');
-const PROD_HTML_PATH = path.join(ROOT_PATH, 'react_build/index.html');
-const DOWNLOAD_HTML_PATH_DEV = path.join(
-  ROOT_PATH,
-  'electron/views/download.html'
-);
+const VIDEO_HTML_PATH = path.join(DIR_NAME, 'views/video.html');
+const PROD_HTML_PATH = path.join(DIR_NAME, 'index.html');
+const DOWNLOAD_HTML_PATH_DEV = path.join(DIR_NAME, 'views/download.html');
 
 /* variable Initialization */
 let mainWindow: Electron.BrowserWindow;
