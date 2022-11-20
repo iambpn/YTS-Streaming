@@ -38,6 +38,7 @@ bower_components
 build
 build/Release
 react_dist
+electron_dist
 
 # Dependency directories
 node_modules/
