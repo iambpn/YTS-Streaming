@@ -15,7 +15,7 @@
     "electron": "electron .",
     "preelectron-dev": "npm run preelectron",
     "electron-dev": "concurrently \"npm run watch-electron\" \"npm start\" \"npm run electron\"",
-    "electron-pack": "electron-builder build -l",
+    "electron-pack": "electron-builder build -lw",
     "preelectron-pack": "npm run build",
     "format": "prettier --write \"./**/*.{ts,tsx,json}\"",
     "lint": "eslint --fix --ext .ts,.tsx,.js,.jsx ."
@@ -67,7 +67,7 @@
     "directories": {
       "buildResources": "builder_assets"
     },
-    "asar": false,
+    "asar": true,
     "appId": "com.mbpn1.yts-streaming",
     "copyright": "Copyright 2022 Maharjan-Bipin",
     "compression": "normal",
