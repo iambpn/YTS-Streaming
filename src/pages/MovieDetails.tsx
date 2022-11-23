@@ -14,25 +14,22 @@ export default function MovieDetails() {
   const [response, updateResponse] = useState<any>('');
   const [suggestionResponse, updateSuggestionResponse] = useState<any>('');
 
-  const { movie_id } = useParams();
+  const { id: movie_id } = useParams();
 
-  const fetchData = (movieURL: URL, suggestionURL: URL) => {
+  const fetchData = async (movieURL: URL, suggestionURL: URL) => {
     updateLoading(true);
-    Promise.all([fetch(movieURL.href), fetch(suggestionURL.href)])
-      .then((res) => {
-        Promise.all([res[0].json(), res[1].json()])
-          .then((data) => {
-            updateResponse(data[0]);
-            updateSuggestionResponse(data[1]);
-            updateLoading(false);
-          })
-          .catch((err) => {
-            updateResponse(err.toString());
-          });
-      })
-      .catch((err) => {
-        updateResponse(err.toString());
-      });
+    try {
+      const res = await Promise.all([
+        fetch(movieURL.href),
+        fetch(suggestionURL.href),
+      ]);
+      const data = await Promise.all([res[0].json(), res[1].json()]);
+      updateResponse(data[0]);
+      updateSuggestionResponse(data[1]);
+    } catch (err: any) {
+      updateResponse(err.toString());
+    }
+    updateLoading(false);
   };
 
   useEffect(() => {

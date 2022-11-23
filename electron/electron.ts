@@ -12,26 +12,17 @@ import WebTorrent, { Torrent } from 'webtorrent';
 import DownloaderWindow from './components/DownloaderWindow';
 import MainWindow from './components/MainWindow';
 import VideoPlayerWindow from './components/VideoPlayerWindow';
+import { captionData, videoPlayData } from './electron.interface';
 
 /**
- * ROOT_PATH: returns running file directory
+ * __dirname: returns running file directory
  * process.cwd():  returns current working directory.
  */
-
-/* Types */
-interface captionData {
-  type: string;
-  data?: any;
-}
-interface videoPlayData {
-  hash: string;
-  title?: string;
-  maxCon: string | null;
-}
 
 /* Paths */
 const ROOT_PATH = process.cwd();
 const DIR_NAME = __dirname;
+
 const PLYR_JS_PATH = path.join(
   DIR_NAME,
   'assets/express/video_player/plyr3.6.8.polyfilled.min.js'
@@ -44,20 +35,73 @@ const BOOTSTRAP_PATH = path.join(
   DIR_NAME,
   'assets/common/bootstrap/bootstrap.min.css'
 );
-const VIDEO_HTML_PATH = path.join(DIR_NAME, 'views/video.html');
+
+const VIDEO_HTML_PATH = path.join(DIR_NAME, 'views/html/video.html');
+const DOWNLOAD_HTML_PATH_DEV = path.join(DIR_NAME, 'views/html/download.html');
 const PROD_HTML_PATH = path.join(DIR_NAME, 'index.html');
-const DOWNLOAD_HTML_PATH_DEV = path.join(DIR_NAME, 'views/download.html');
+
+const DEV_STATIC_PATH = 'http://localhost:3000';
+const PROD_STATIC_PATH = 'http://localhost:18080';
+const PROD_ASSETS = path.join(DIR_NAME, 'assets');
+const VIDEO_STREAM_PATH = 'http://127.0.0.1:19000/streaming';
+
+/* Setup caption config */
+const captionConf = path.join(ROOT_PATH, '.CaptionConf');
+const defaultCaptionFont = { fontSize: { small: 13, medium: 15, large: 21 } };
 
 /* variable Initialization */
 let mainWindow: Electron.BrowserWindow;
-let videoPlayerWindow: Electron.BrowserWindow;
-let webtorrent_client: WebTorrent.Instance;
-let server: http.Server;
-let downloaderWindow: BrowserWindow;
+let videoPlayerWindow: Electron.BrowserWindow | undefined = undefined;
+let webtorrent_client: WebTorrent.Instance | undefined = undefined;
+let stream_server: http.Server | undefined = undefined;
+let static_server: http.Server | undefined = undefined;
+let downloaderWindow: BrowserWindow | undefined = undefined;
 
-/* Setup caption config */
-const captionConf = path.join(process.cwd(), '.CaptionConf');
-const defaultCaptionFont = { fontSize: { small: 13, medium: 15, large: 21 } };
+/* App Events */
+// Starting Point
+app.on('ready', () => {
+  if (!isDev) {
+    static_server = serveStaticContent(express());
+  }
+  createWindow();
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+});
+
+app.on('browser-window-focus', function () {
+  globalShortcut.register('CommandOrControl+R', () => {
+    console.log('CommandOrControl+R is pressed: Shortcut Disabled');
+  });
+  globalShortcut.register('F5', () => {
+    console.log('F5 is pressed: Shortcut Disabled');
+  });
+  globalShortcut.register('CommandOrControl+Shift+I', () => {
+    console.log('Inspect Element: Shortcut Disabled');
+  });
+});
+
+app.on('browser-window-blur', function () {
+  globalShortcut.unregister('CommandOrControl+R');
+  globalShortcut.unregister('F5');
+  globalShortcut.unregister('CommandOrControl+Shift+I');
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('will-quit', () => {
+  if (static_server) {
+    static_server.close(() => {
+      console.log('static server closed');
+      static_server = undefined;
+    });
+  }
+});
 
 /* IPC CALLS */
 ipcMain.on('ExternalLink:Open', (event, link: string) => {
@@ -68,23 +112,12 @@ ipcMain.on('Cache:ClearCache', (event, data: null) => {
   const dir = path.join(os.tmpdir(), 'webtorrent');
   if (fs.existsSync(dir)) {
     fs.rmdir(dir, { recursive: true }, () => {});
-  } else if (fs.existsSync('C:\\tmp')) {
-    fs.rmdir('C:\\tmp', { recursive: true }, () => {});
   }
 });
 
 ipcMain.on('Cache:ShowSpaceRequest', (event, data: null) => {
   const dir = path.join(os.tmpdir(), 'webtorrent');
   if (fs.existsSync(dir)) {
-    fs.readdir(dir, (err, files) => {
-      event.sender.send(
-        'Cache:ShowSpaceResponse',
-        `${files.length} folder are in cache. About ${
-          files.length * 500
-        } MB data`
-      );
-    });
-  } else if (fs.existsSync('C:\\tmp')) {
     fs.readdir(dir, (err, files) => {
       event.sender.send(
         'Cache:ShowSpaceResponse',
@@ -112,7 +145,7 @@ ipcMain.on('style:caption', (event, args: captionData) => {
 });
 
 ipcMain.handle('video:play', async (event, data: videoPlayData) => {
-  if (server != null || webtorrent_client != null) {
+  if (stream_server || webtorrent_client) {
     dialog.showErrorBox(
       'Movie player or Downloader is already running',
       'An instance of Movie Player | Downloader is already running. Please close the existing  or downloader window and try again.'
@@ -149,11 +182,11 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
   });
   // hosting files end
 
-  const maxCon = data.maxCon !== null ? Number(data.maxCon) : 55;
+  const maxCon = data.maxCon ? Number(data.maxCon) : 55;
   webtorrent_client = new WebTorrent({ maxConns: maxCon });
 
   const torrent: Torrent = await new Promise((resolve, reject) => {
-    webtorrent_client.add(data.hash, {}, (torrent) => {
+    webtorrent_client!.add(data.hash, {}, (torrent) => {
       resolve(torrent);
     });
   });
@@ -164,9 +197,10 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
     return file.name.endsWith('.mp4');
   });
 
-  if (videoFile === undefined) {
+  if (!videoFile) {
     webtorrent_client.destroy(() => {
       console.log('Client destroyed before downloading Movie');
+      webtorrent_client = undefined;
       downloadMovieInstead(data.hash, maxCon, torrent.path);
     });
     return;
@@ -254,7 +288,7 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
     });
 
     // start server
-    server = express_app.listen(9000, 'localhost', () => {
+    stream_server = express_app.listen(19000, 'localhost', () => {
       console.log('server ready');
       createVideoPlayerWindow();
     });
@@ -262,17 +296,23 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
 
   // if torrent error occurs
   torrent.on('error', function (err) {
-    webtorrent_client.destroy(() => {
-      console.log('Client destroyed due torrent error.');
-    });
+    if (webtorrent_client) {
+      webtorrent_client.destroy(() => {
+        console.log('Client destroyed due torrent error.');
+        webtorrent_client = undefined;
+      });
+    }
     dialog.showErrorBox('Torrent Error', err.toString());
   });
 
   // if no peers in torrent
   torrent.on('noPeers', function (announceType) {
-    webtorrent_client.destroy(() => {
-      console.log('Client destroyed due to no peers or network issue.');
-    });
+    if (webtorrent_client) {
+      webtorrent_client.destroy(() => {
+        console.log('Client destroyed due to no peers or network issue.');
+        webtorrent_client = undefined;
+      });
+    }
     dialog.showErrorBox('Torrent Warning', 'No peers available to stream.');
   });
 
@@ -282,6 +322,7 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
       webtorrent_client.destroy(() => {
         console.log('Client destroyed due to Torrent client error.');
         console.log(err.toString());
+        webtorrent_client = undefined;
       });
     }
     dialog.showErrorBox('Torrent Client Error', err.toString());
@@ -290,11 +331,16 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
 
 /* Helper Functions */
 function closeServerAndClient() {
-  server.close(() => {
-    console.log('server closed');
-  });
+  if (stream_server) {
+    stream_server.close(() => {
+      console.log('server closed');
+      stream_server = undefined;
+    });
+  }
   if (webtorrent_client) {
-    webtorrent_client.destroy(() => {});
+    webtorrent_client.destroy(() => {
+      webtorrent_client = undefined;
+    });
   }
 }
 
@@ -339,7 +385,9 @@ function downloadMovieInstead(
 
     // add IPC listener for torrent
     ipcMain.on('download:stop', () => {
-      downloaderWindow.close();
+      if (downloaderWindow) {
+        downloaderWindow.close();
+      }
     });
 
     // ipcMain.on("download:pause", () => {
@@ -354,7 +402,7 @@ function downloadMovieInstead(
 
     // every time torrent downloads
     torrent.on('download', (bytes) => {
-      downloaderWindow.webContents.send('download:info', {
+      downloaderWindow!.webContents.send('download:info', {
         progress: torrent.progress,
         downloadSpeed: torrent.downloadSpeed,
         uploadSpeed: torrent.uploadSpeed,
@@ -362,12 +410,12 @@ function downloadMovieInstead(
         downloadSize: torrent.length,
         totalDownloaded: torrent.downloaded,
       });
-      downloaderWindow.setProgressBar(torrent.progress);
+      downloaderWindow!.setProgressBar(torrent.progress);
     });
 
     // on torrent complete
     torrent.on('done', () => {
-      downloaderWindow.close();
+      downloaderWindow!.close();
       const completeRes = dialog.showMessageBoxSync({
         type: 'info',
         title: 'Download Completed',
@@ -400,7 +448,7 @@ function downloadMovieInstead(
 }
 
 function createWindow() {
-  const url = isDev ? 'http://localhost:3000' : `file://${PROD_HTML_PATH}`;
+  const url = isDev ? DEV_STATIC_PATH : PROD_STATIC_PATH;
   const state = windowStateKeeper({
     defaultWidth: 1200,
     defaultHeight: 1000,
@@ -414,11 +462,11 @@ function createWindow() {
   }
 
   mainWindow.on('closed', () => {
-    if (videoPlayerWindow != null) {
+    if (videoPlayerWindow) {
       videoPlayerWindow.close();
     }
 
-    if (downloaderWindow != null) {
+    if (downloaderWindow) {
       downloaderWindow.close();
     }
   });
@@ -427,7 +475,7 @@ function createWindow() {
 }
 
 function createVideoPlayerWindow() {
-  const url = 'http://127.0.0.1:9000/streaming';
+  const url = VIDEO_STREAM_PATH;
   videoPlayerWindow = new VideoPlayerWindow(url);
 
   if (isDev) {
@@ -436,13 +484,12 @@ function createVideoPlayerWindow() {
 
   videoPlayerWindow.on('closed', () => {
     closeServerAndClient();
+    videoPlayerWindow = undefined;
   });
 }
 
 function createDownloaderWindow() {
-  const url = isDev
-    ? `file://${DOWNLOAD_HTML_PATH_DEV}`
-    : `file://${DOWNLOAD_HTML_PATH_DEV}`;
+  const url = `file://${DOWNLOAD_HTML_PATH_DEV}`;
   downloaderWindow = new DownloaderWindow(url);
 
   if (isDev) {
@@ -450,46 +497,33 @@ function createDownloaderWindow() {
   }
 
   downloaderWindow.on('closed', () => {
-    webtorrent_client.destroy(() => {
-      console.log('Client destroyed on window closed');
-      ipcMain.removeAllListeners('download:stop');
-      // ipcMain.removeAllListeners("download:resume")
-      // ipcMain.removeAllListeners("download:pause")
-    });
+    downloaderWindow = undefined;
+    if (webtorrent_client) {
+      webtorrent_client.destroy(() => {
+        console.log('Client destroyed on window closed');
+        webtorrent_client = undefined;
+        ipcMain.removeAllListeners('download:stop');
+        // ipcMain.removeAllListeners("download:resume")
+        // ipcMain.removeAllListeners("download:pause")
+      });
+    }
   });
 }
 
-/* App Events */
+function serveStaticContent(app: express.Express, port = 18080): http.Server {
+  /* Serve React Assets */
+  app.use(
+    '/assets',
+    express.static(PROD_ASSETS, {
+      index: false,
+    })
+  );
 
-// Main Event : Starting Point
-app.on('ready', () => {
-  createWindow();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  app.get('/', (req, res) => {
+    res.sendFile(PROD_HTML_PATH);
   });
-});
 
-app.on('browser-window-focus', function () {
-  globalShortcut.register('CommandOrControl+R', () => {
-    console.log('CommandOrControl+R is pressed: Shortcut Disabled');
+  return app.listen(port, 'localhost', () => {
+    console.log('Static Content is ready.');
   });
-  globalShortcut.register('F5', () => {
-    console.log('F5 is pressed: Shortcut Disabled');
-  });
-  globalShortcut.register('CommandOrControl+Shift+I', () => {
-    console.log('Inspect Element: Shortcut Disabled');
-  });
-});
-
-app.on('browser-window-blur', function () {
-  globalShortcut.unregister('CommandOrControl+R');
-  globalShortcut.unregister('F5');
-  globalShortcut.unregister('CommandOrControl+Shift+I');
-});
-
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
+}

@@ -3,16 +3,18 @@
   "version": "3.0.0",
   "private": true,
   "type": "commonjs",
-  "main": "electron_dist/electron.js",
+  "main": "build/electron.js",
   "scripts": {
     "start": "vite --port 3000",
-    "build": "tsc --project electron && vite build",
-    "postbuild": "cp -r ./electron/assets ./electron/views ./electron_dist",
-    "clean": "rm -r dist electron_dist react_dist",
+    "build": "vite build && tsc --project electron",
+    "postbuild": "cp -r ./electron/assets ./electron/views ./build",
+    "clean": "rm -r dist build",
     "preview": "vite preview",
-    "watch-tsc-electron": "tsc --watch --project electron",
+    "watch-electron": "tsc --watch --project electron",
+    "preelectron": "mkdir ./build && npm run postbuild || npm run postbuild",
     "electron": "electron .",
-    "electron-dev": "concurrently \"npm run watch-tsc-electron\" \"npm start\" \"npm run electron\"",
+    "preelectron-dev": "npm run preelectron",
+    "electron-dev": "concurrently \"npm run watch-electron\" \"npm start\" \"npm run electron\"",
     "electron-pack": "electron-builder build -l",
     "preelectron-pack": "npm run build",
     "format": "prettier --write \"./**/*.{ts,tsx,json}\"",
@@ -57,11 +59,7 @@
     },
     "files": [
       {
-        "from": "react_dist",
-        "to": "dist"
-      },
-      {
-        "from": "electron_dist",
+        "from": "build",
         "to": "dist"
       },
       "package.json"

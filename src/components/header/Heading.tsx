@@ -34,7 +34,7 @@ export default function Heading(props: any) {
           <nav className="navbar navbar-dark bg-dark justify-content-center border-0">
             <Link to="/" onClick={handleGoHome}>
               <img
-                src="assets/images/logo_final.png"
+                src="/assets/images/logo_final.png"
                 alt="Logo"
                 className="d-inline-block align-top"
               />

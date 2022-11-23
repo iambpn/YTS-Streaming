@@ -124,7 +124,7 @@ export default function MovieIntro(props: MovieIntroProps) {
           </div>
           <div className="row">
             <div className="col-3 col-lg-2">
-              <img src="asstes/images/logo-imdb-svg.svg" alt="IMDb" />
+              <img src="/assets/images/logo-imdb-svg.svg" alt="IMDB" />
             </div>
             <div className="col rating_info text-white">
               <span>{props.movie.rating}</span>

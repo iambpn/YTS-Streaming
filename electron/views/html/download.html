@@ -6,7 +6,7 @@
         <meta name="viewport"
             content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <link rel="stylesheet" href="assets/common/bootstrap/bootstrap.min.css">
+        <link rel="stylesheet" href="../../assets/bootstrap/bootstrap.min.css">
         <title>Downloader</title>
     </head>
 
@@ -16,8 +16,8 @@
     </body>
 
 </html>
-<script src="asstes/electron/react_cdn/react.production.min.js"></script>
-<script src="asstes/electron/react_cdn/react-dom.production.min.js"></script>
+<script src="../../asstes/react_cdn/react.production.min.js"></script>
+<script src="../../asstes/react_cdn/react-dom.production.min.js"></script>
 <script>
     function Download() { const [e, t] = React.useState({ progress: 0, downloadSpeed: 0, uploadSpeed: 0, title: "", downloadSize: 0, totalDownloaded: 0 }), [a, l] = React.useState(!1); React.useEffect(() => { window.api.receive("download:info", e => { e.uploadSpeed = (e.uploadSpeed / 1e6).toString(), e.uploadSpeed = e.uploadSpeed.slice(0, e.uploadSpeed.indexOf(".") + 3), e.downloadSpeed = (e.downloadSpeed / 1e6).toString(), e.downloadSpeed = e.downloadSpeed.slice(0, e.downloadSpeed.indexOf(".") + 3), e.progress = (100 * e.progress).toString(), e.progress = e.progress.slice(0, e.progress.indexOf(".") + 2), e.totalDownloaded = (e.totalDownloaded / 1e9).toString(), e.totalDownloaded = e.totalDownloaded.slice(0, e.totalDownloaded.indexOf(".") + 4), e.downloadSize = (e.downloadSize / 1e9).toString(), e.downloadSize = e.downloadSize.slice(0, e.downloadSize.indexOf(".") + 4), t(e) }) }, []); return React.createElement("div", { className: "container align-items-center d-flex", style: { height: "100vh" } }, React.createElement("div", { className: "w-100" }, React.createElement("div", { className: "row g-0 justify-content-between w-100" }, React.createElement("div", { className: "col-8 g-0" }, React.createElement("h6", { className: "text-truncate w-100 d-inline-block mb-0" }, "Downloading:", React.createElement("span", { id: "title" }, e.title))), React.createElement("div", { className: "col-4 g-0 text-end", style: { fontSize: "16px" } }, React.createElement("span", { className: "pr-1" }, React.createElement("span", { id: "up_speed" }, e.uploadSpeed), " ↑M"), React.createElement("span", null, "/"), React.createElement("span", { className: "pr-2" }, React.createElement("span", { id: "down_speed" }, e.downloadSpeed), " ↓M"))), React.createElement("div", { className: "progress w-100" }, React.createElement("div", { className: "progress-bar", id: "progressBar", style: { width: e.progress + "%" } }, e.progress, "%")), React.createElement("div", { className: "d-flex justify-content-between w-100" }, React.createElement("div", null, React.createElement("span", null, e.totalDownloaded, " G"), React.createElement("span", null, "/"), React.createElement("span", null, e.downloadSize, " G")), React.createElement("div", null, React.createElement("button", { className: "btn btn-outline-danger m-1 mt-2", id: "cancel", onClick: () => { window.api.send("download:stop", null) } }, "Cancel"))))) } ReactDOM.render(React.createElement(Download, null), document.getElementById("root"));
 </script>
