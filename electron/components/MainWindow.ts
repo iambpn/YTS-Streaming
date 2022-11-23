@@ -18,6 +18,10 @@ class MainWindow extends BrowserWindow {
         preload: path.join(__dirname, 'preload.js'),
         backgroundThrottling: false,
       },
+      icon:
+        process.platform === 'linux'
+          ? path.join(__dirname, '../assets/icons/256x256.png')
+          : undefined,
     });
     this.loadURL(url);
   }
