@@ -25,25 +25,28 @@ const DIR_NAME = __dirname;
 
 const PLYR_JS_PATH = path.join(
   DIR_NAME,
-  'assets/express/video_player/plyr3.6.8.polyfilled.min.js'
+  'assets/video_player/plyr3.6.8.polyfilled.min.js'
 );
 const PLYR_CSS_PATH = path.join(
   DIR_NAME,
-  'assets/express/video_player/plyr3.6.8.min.css'
+  'assets/video_player/plyr3.6.8.min.css'
 );
 const BOOTSTRAP_PATH = path.join(
   DIR_NAME,
-  'assets/common/bootstrap/bootstrap.min.css'
+  'assets/bootstrap/bootstrap.min.css'
 );
 
 const VIDEO_HTML_PATH = path.join(DIR_NAME, 'views/html/video.html');
 const DOWNLOAD_HTML_PATH_DEV = path.join(DIR_NAME, 'views/html/download.html');
 const PROD_HTML_PATH = path.join(DIR_NAME, 'index.html');
 
-const DEV_STATIC_PATH = 'http://localhost:3000';
-const PROD_STATIC_PATH = 'http://localhost:18080';
+const DEV_STATIC_HOST = 'localhost';
+const DEV_STATIC_PORT = '3000';
+const PROD_STATIC_HOST = 'localhost';
+const PROD_STATIC_PORT = '18080';
 const PROD_ASSETS = path.join(DIR_NAME, 'assets');
-const VIDEO_STREAM_PATH = 'http://127.0.0.1:19000/streaming';
+const VIDEO_STREAM_HOST = 'localhost';
+const VIDEO_STREAM_PORT = '19000';
 
 /* Setup caption config */
 const captionConf = path.join(ROOT_PATH, '.CaptionConf');
@@ -98,7 +101,6 @@ app.on('will-quit', () => {
   if (static_server) {
     static_server.close(() => {
       console.log('static server closed');
-      static_server = undefined;
     });
   }
 });
@@ -200,7 +202,6 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
   if (!videoFile) {
     webtorrent_client.destroy(() => {
       console.log('Client destroyed before downloading Movie');
-      webtorrent_client = undefined;
       downloadMovieInstead(data.hash, maxCon, torrent.path);
     });
     return;
@@ -288,10 +289,14 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
     });
 
     // start server
-    stream_server = express_app.listen(19000, 'localhost', () => {
-      console.log('server ready');
-      createVideoPlayerWindow();
-    });
+    stream_server = express_app.listen(
+      +VIDEO_STREAM_PORT,
+      VIDEO_STREAM_HOST,
+      () => {
+        console.log('server ready');
+        createVideoPlayerWindow();
+      }
+    );
   }
 
   // if torrent error occurs
@@ -299,7 +304,6 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
     if (webtorrent_client) {
       webtorrent_client.destroy(() => {
         console.log('Client destroyed due torrent error.');
-        webtorrent_client = undefined;
       });
     }
     dialog.showErrorBox('Torrent Error', err.toString());
@@ -310,7 +314,6 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
     if (webtorrent_client) {
       webtorrent_client.destroy(() => {
         console.log('Client destroyed due to no peers or network issue.');
-        webtorrent_client = undefined;
       });
     }
     dialog.showErrorBox('Torrent Warning', 'No peers available to stream.');
@@ -322,7 +325,6 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
       webtorrent_client.destroy(() => {
         console.log('Client destroyed due to Torrent client error.');
         console.log(err.toString());
-        webtorrent_client = undefined;
       });
     }
     dialog.showErrorBox('Torrent Client Error', err.toString());
@@ -334,12 +336,10 @@ function closeServerAndClient() {
   if (stream_server) {
     stream_server.close(() => {
       console.log('server closed');
-      stream_server = undefined;
     });
   }
   if (webtorrent_client) {
     webtorrent_client.destroy(() => {
-      webtorrent_client = undefined;
     });
   }
 }
@@ -359,7 +359,7 @@ function downloadMovieInstead(
     title: 'Media content not supported by YTS Player',
     message: 'Do you want to download it instead?',
     detail:
-      'No streamable video source found in the torrent to stream. \nYou can download it instead and play with another video player',
+      'No stream-able video source found in the torrent to stream. \nYou can download it instead and play with another video player',
     buttons: ['Download', 'Cancel'],
     defaultId: 0,
     cancelId: 1,
@@ -448,7 +448,9 @@ function downloadMovieInstead(
 }
 
 function createWindow() {
-  const url = isDev ? DEV_STATIC_PATH : PROD_STATIC_PATH;
+  const url = isDev
+    ? `http://${DEV_STATIC_HOST}:${DEV_STATIC_PORT}`
+    : `http://${PROD_STATIC_HOST}:${PROD_STATIC_PORT}`;
   const state = windowStateKeeper({
     defaultWidth: 1200,
     defaultHeight: 1000,
@@ -475,7 +477,7 @@ function createWindow() {
 }
 
 function createVideoPlayerWindow() {
-  const url = VIDEO_STREAM_PATH;
+  const url = `http://${VIDEO_STREAM_HOST}:${VIDEO_STREAM_PORT}/streaming`;
   videoPlayerWindow = new VideoPlayerWindow(url);
 
   if (isDev) {
@@ -484,7 +486,6 @@ function createVideoPlayerWindow() {
 
   videoPlayerWindow.on('closed', () => {
     closeServerAndClient();
-    videoPlayerWindow = undefined;
   });
 }
 
@@ -497,11 +498,9 @@ function createDownloaderWindow() {
   }
 
   downloaderWindow.on('closed', () => {
-    downloaderWindow = undefined;
     if (webtorrent_client) {
       webtorrent_client.destroy(() => {
         console.log('Client destroyed on window closed');
-        webtorrent_client = undefined;
         ipcMain.removeAllListeners('download:stop');
         // ipcMain.removeAllListeners("download:resume")
         // ipcMain.removeAllListeners("download:pause")
@@ -510,7 +509,7 @@ function createDownloaderWindow() {
   });
 }
 
-function serveStaticContent(app: express.Express, port = 18080): http.Server {
+function serveStaticContent(app: express.Express): http.Server {
   /* Serve React Assets */
   app.use(
     '/assets',
@@ -523,7 +522,7 @@ function serveStaticContent(app: express.Express, port = 18080): http.Server {
     res.sendFile(PROD_HTML_PATH);
   });
 
-  return app.listen(port, 'localhost', () => {
+  return app.listen(+PROD_STATIC_PORT, PROD_STATIC_HOST, () => {
     console.log('Static Content is ready.');
   });
 }

@@ -13,7 +13,7 @@
     "watch-electron": "tsc --watch --project electron",
     "preelectron": "mkdir ./build && npm run postbuild || npm run postbuild",
     "electron": "electron .",
-    "preelectron-dev": "npm run preelectron",
+    "preelectron-dev": "npm run preelectron && tsc --project electron",
     "electron-dev": "concurrently \"npm run watch-electron\" \"npm start\" \"npm run electron\"",
     "electron-pack": "electron-builder build -lw",
     "preelectron-pack": "npm run build",
