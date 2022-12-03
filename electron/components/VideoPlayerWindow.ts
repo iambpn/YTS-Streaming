@@ -1,4 +1,5 @@
 import { BrowserWindow, Menu, shell } from 'electron';
+import path from 'path';
 
 class VideoPlayerWindow extends BrowserWindow {
   constructor(url: string) {
@@ -12,6 +13,10 @@ class VideoPlayerWindow extends BrowserWindow {
       title: 'YTS-Player',
       autoHideMenuBar: true,
       webPreferences: {},
+      icon:
+        process.platform === 'linux'
+          ? path.join(__dirname, '../assets/icons/256x256.png')
+          : undefined,
     });
     this.setMenu(
       Menu.buildFromTemplate([

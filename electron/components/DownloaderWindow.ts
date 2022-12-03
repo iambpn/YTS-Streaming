@@ -15,6 +15,10 @@ export default class DownloaderWindow extends BrowserWindow {
         preload: path.join(__dirname, 'preload.js'),
         backgroundThrottling: false,
       },
+      icon:
+        process.platform === 'linux'
+          ? path.join(__dirname, '../assets/icons/256x256.png')
+          : undefined,
     });
     this.setMenuBarVisibility(false);
     this.loadURL(url);
