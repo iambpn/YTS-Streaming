@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+            content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'">
+        <script src="/plyr-js"></script>
+        <link rel="stylesheet" href="/plyr-css" />
+        <link rel="stylesheet" href="/bootstrapv5" />
+        <title>YTS-Player</title>
+        <style>
+            .plyr--full-ui {
+                width: 100%;
+                height: 100vh;
+            }
+        </style>
+    </head>
+
+    <body style="user-select:none;">
+        <div>
+            <video id="player" controls style="width:100%; height:100vh;">
+                <source src="/video" type="video/mp4" />
+            </video>
+            <!--    right override-->
+            <div style="position: absolute; top: 10px; left: 10px;">
+                <div id="download_status" style="font-size: 14px;">
+                    <span>Downloading</span>
+                </div>
+                <div id="show_download_info" class="d-inline-block align-middle" style="font-size: 16px;">
+                    <span class="pr-1"><span id="total_downloaded">0</span> G</span>
+                    <span>/</span>
+                    <span class="pr-2"><span id="total_size">0</span> G</span>
+                </div>
+            </div>
+            <!--    left override-->
+            <div style="position: absolute; top: 10px; right: 10px;" class="text-end">
+                <div id="show_speed" class="d-inline-block align-middle" style="font-size: 16px;">
+                    <span class="pr-1"><span id="up_speed">0</span> &uarr;M</span>
+                    <span>/</span>
+                    <span class="pr-2"><span id="down_speed">0</span> &darr;M</span>
+                </div>
+                <div id="choose_subtitle" onclick="chooseSubtitle(event)" data-toggle="tooltip" data-placement="bottom"
+                    title="Add Subtitle" class="btn btn-outline-success p-1" style="font-size: 14px;">
+                    <svg width="1.5em" height="1.5em" viewBox="0 0 16 16" class="bi bi-file-text" fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                            d="M4 1h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2zm0 1a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H4z" />
+                        <path fill-rule="evenodd"
+                            d="M4.5 10.5A.5.5 0 0 1 5 10h3a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 8h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 6h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0-2A.5.5 0 0 1 5 4h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5z" />
+                    </svg>
+                    <span>Add Subtitle</span>
+                </div>
+                <div style="font-size: 14px;" class="mt-1" id="location">
+                    <span id="download_location"></span>
+                </div>
+            </div>
+            <div style="display: none;">
+                <input type="file" id="select_subtitle" accept=".srt,.vtt" />
+            </div>
+        </div>
+        <script>
+            //Functions definition and declaration
+            function initializeListener() {
+                document.getElementsByTagName("video")[0].addEventListener("play", (event) => {
+                    document.getElementById("choose_subtitle").style.display = "none";
+                    document.getElementById("download_status").style.display = "none";
+                    document.getElementById("location").style.display = "none";
+                    document.getElementById("show_speed").style.fontSize = "14px";
+                    document.getElementById("show_download_info").style.fontSize = "14px";
+                });
+                document.getElementsByTagName("video")[0].addEventListener("pause", (event) => {
+                    document.getElementById("choose_subtitle").style.display = "inline-block";
+                    document.getElementById("download_status").style.display = "block";
+                    document.getElementById("location").style.display = "block";
+                    document.getElementById("show_speed").style.fontSize = "16px";
+                    document.getElementById("show_download_info").style.fontSize = "16px";
+                });
+            }
+
+            function setTitle() {
+                fetch('/title')
+                    .then(res => {
+                        res.json().then(data => {
+                            document.title = data.title;
+                        })
+                    });
+            }
+
+            async function setCaptionFontSize(player) {
+                const propertyKeys = {
+                    "small": "--plyr-font-size-small",
+                    "medium": "--plyr-font-size-base",
+                    "large": "--plyr-font-size-large",
+                    "xlarge": "--plyr-font-size-xlarge"
+                }
+                let res = await fetch('/custom-caption');
+                let data = await res.json();
+                if (res.ok) {
+                    for (let key in data.fontSize) {
+                        player.on("captionsenabled", () => {
+                            document.getElementsByClassName("plyr__captions")[0].style.setProperty(propertyKeys[key], `${data.fontSize[key]}px`);
+                            if (key === "large") {
+                                document.getElementsByClassName("plyr__captions")[0].style.setProperty(propertyKeys["xlarge"], `${data.fontSize[key]}px`);
+                            }
+                        })
+                    }
+                }
+            }
+
+            function getPlayerInstance() {
+                return new Plyr("#player", {
+                    title: "",
+                    enabled: true,
+                    controls: [
+                        "play-large", // The large play button in the center
+                        "rewind", // Rewind by the seek time (default 10 seconds)
+                        "play", // Play/pause playback
+                        "fast-forward", // Fast forward by the seek time (default 10 seconds)
+                        "progress", // The progress bar and scrubber for playback and buffering
+                        "current-time", // The current time of playback
+                        "duration", // The full duration of the media
+                        "mute", // Toggle mute
+                        "volume", // Volume control
+                        "captions", // Toggle captions
+                        "settings", // Settings menu
+                        "pip", // Picture-in-picture (currently Safari only)
+                        "airplay", // Airplay (currently Safari only)
+                        "fullscreen", // Toggle fullscreen
+                    ],
+                    tooltips: { controls: true, seek: true },
+                });
+            }
+
+            function chooseSubtitle(event) {
+                event.preventDefault();
+                let subtitle = document.getElementById("select_subtitle")
+                subtitle.click();
+                subtitle.addEventListener("change", () => {
+                    addSubtitle("Custom", `/subtitleApi/add?path=${subtitle.files[0].path}`);
+                });
+            }
+
+            function addSubtitle(label, subtitle_path) {
+                tracks += 1;
+                player.source = {
+                    type: "video",
+                    sources: [
+                        {
+                            src: `/video`,
+                            type: "video/mp4",
+                        },
+                    ],
+                    tracks: [{
+                        kind: 'captions',
+                        label: label + " " + tracks,
+                        src: subtitle_path,
+                    }]
+                };
+                initializeListener();
+            }
+
+            function updateSpeed() {
+                fetch('/speed')
+                    .then(res => {
+                        res.json()
+                            .then(data => {
+                                data.up = (data.up / (1000 * 1000)).toString();
+                                data.up = data.up.slice(0, (data.up.indexOf(".")) + 3)
+                                data.down = (data.down / (1000 * 1000)).toString();
+                                data.down = data.down.slice(0, (data.down.indexOf(".")) + 3)
+                                document.getElementById("up_speed").innerHTML = data.up;
+                                document.getElementById("down_speed").innerHTML = data.down;
+                            })
+                    })
+            }
+
+            function updateDownloadInfo() {
+                fetch('/downloadInfo')
+                    .then(res => {
+                        res.json()
+                            .then(data => {
+                                data.total_downloaded = (data.total_downloaded / (1000 ** 3)).toString();
+                                data.total_downloaded = data.total_downloaded.slice(0, (data.total_downloaded.indexOf(".")) + 4)
+                                data.total_size = (data.total_size / (1000 ** 3)).toString();
+                                data.total_size = data.total_size.slice(0, (data.total_size.indexOf(".")) + 4)
+                                document.getElementById("download_location").innerText = `Saved at: ${data.path}`;
+                                document.getElementById("total_downloaded").innerHTML = data.total_downloaded;
+                                document.getElementById("total_size").innerHTML = data.total_size;
+
+                                // check for complete download
+                                if (data.total_downloaded === data.total_size) {
+                                    if (speed_interval !== null) {
+                                        clearInterval(speed_interval);
+                                        speed_interval = setInterval(updateSpeed, 5000);
+                                    }
+                                    if (download_interval !== null) {
+                                        clearInterval(download_interval);
+                                    }
+                                    // change status
+                                    document.getElementById("download_status").innerHTML = "Download Completed.";
+                                }
+                            })
+                    })
+            }
+
+            // Main Method
+            let tracks = 0;
+            let speed_interval = null;
+            let download_interval = null;
+            initializeListener();
+            const player = getPlayerInstance();
+            setTitle();
+            setCaptionFontSize(player);
+            speed_interval = setInterval(updateSpeed, 3000);
+            download_interval = setInterval(updateDownloadInfo, 3000);
+        </script>
+    </body>
+
+</html>

@@ -1,21 +1,21 @@
 import React from 'react';
-import {Route, Switch} from "react-router-dom"
+import { Outlet, Route, Routes } from 'react-router-dom';
 import './App.scss';
-import EntryPage from "./pages/EntryPage";
-import MovieDetails from "./pages/MovieDetails";
-import AppContextProvider from "./store/AppContextProvider";
+import EntryPage from './pages/EntryPage';
+import MovieDetails from './pages/MovieDetails';
+import AppContextProvider from './store/AppContextProvider';
 
 function App() {
-    return (
-        <React.Fragment>
-            <AppContextProvider>
-                <Switch>
-                    <Route component={EntryPage} path={"/"} exact={true}/>
-                    <Route component={MovieDetails} path={"/movie/:id"} exact={true}/>
-                </Switch>
-            </AppContextProvider>
-        </React.Fragment>
-    );
+  return (
+    <React.Fragment>
+      <AppContextProvider>
+        <Routes>
+          <Route path="/" element={<EntryPage />} />
+          <Route path="movie/:id" element={<MovieDetails />} />
+        </Routes>
+      </AppContextProvider>
+    </React.Fragment>
+  );
 }
 
 export default App;
