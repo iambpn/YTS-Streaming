@@ -25,11 +25,11 @@ const DIR_NAME = __dirname;
 
 const PLYR_JS_PATH = path.join(
   DIR_NAME,
-  'assets/video_player/plyr3.6.8.polyfilled.min.js'
+  'assets/video_player/plyr3.7.3.polyfilled.min.js'
 );
 const PLYR_CSS_PATH = path.join(
   DIR_NAME,
-  'assets/video_player/plyr3.6.8.min.css'
+  'assets/video_player/plyr3.7.3.min.css'
 );
 const BOOTSTRAP_PATH = path.join(
   DIR_NAME,
@@ -47,6 +47,9 @@ const PROD_STATIC_PORT = '18080';
 const PROD_ASSETS = path.join(DIR_NAME, 'assets');
 const VIDEO_STREAM_HOST = 'localhost';
 const VIDEO_STREAM_PORT = '19000';
+
+/* Const Variable */
+const MB = 1e6;
 
 /* Setup caption config */
 const captionConf = path.join(ROOT_PATH, '.CaptionConf');
@@ -113,7 +116,7 @@ ipcMain.on('ExternalLink:Open', (event, link: string) => {
 ipcMain.on('Cache:ClearCache', (event, data: null) => {
   const dir = path.join(os.tmpdir(), 'webtorrent');
   if (fs.existsSync(dir)) {
-    fs.rmdir(dir, { recursive: true }, () => {});
+    fs.rm(dir, { recursive: true }, () => {});
   }
 });
 
@@ -199,110 +202,126 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
     return file.name.endsWith('.mp4');
   });
 
-  if (!videoFile) {
-    webtorrent_client.destroy(() => {
-      console.log('Client destroyed before downloading Movie');
+  if (videoFile) {
+    closeWebTorrentClient(() => {
+      console.log('Webtorrent Client destroyed before downloading Movie');
       downloadMovieInstead(data.hash, maxCon, torrent.path);
     });
     return;
-  } else {
-    // host video file
-    express_app.get('/video', function (req, res) {
-      const fileSize = videoFile.length;
-      const range = req.headers.range;
-      if (range) {
-        const parts = range.replace(/bytes=/, '').split('-');
-        const start = parseInt(parts[0], 10);
-        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-        const chunkSize = end - start + 1;
-        const stream = videoFile.createReadStream({ start, end });
-        const head = {
-          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-          'Accept-Ranges': 'bytes',
-          'Content-Length': chunkSize,
-          'Content-Type': 'video/mp4',
-        };
-        res.writeHead(206, head);
-        stream.pipe(res);
-      } else {
-        const head = {
-          'Content-Length': fileSize,
-          'Content-Type': 'video/mp4',
-        };
-        res.writeHead(200, head);
-        videoFile.createReadStream().pipe(res);
-      }
-    });
-
-    // subtitle api
-    express_app.get('/subtitleApi/add', (req, res) => {
-      try {
-        if (req.query.path) {
-          const path_query = req.query.path as string;
-          const subtitle_path: string[] = path_query.split('.');
-          if (subtitle_path[subtitle_path.length - 1] === 'srt') {
-            const srtData = fs.readFileSync(path_query);
-            const newPath = path.join(torrent.path, '/', 'customCaption.vtt');
-            srt2vtt(srtData, function (err: any, vttData: any) {
-              if (err) throw new Error(err);
-              fs.writeFileSync(newPath, vttData);
-              fs.createReadStream(newPath).pipe(res);
-            });
-          } else if (subtitle_path[subtitle_path.length - 1] === 'vtt') {
-            fs.createReadStream(path_query).pipe(res);
-          } else {
-            throw new Error(
-              'Subtitle MIME type not supported. Should be .srt or .vtt'
-            );
-          }
-        } else {
-          throw new Error('Subtitle path not found');
-        }
-      } catch (err: any) {
-        dialog.showErrorBox('Error while adding subtitle', err.toString());
-        res.sendStatus(400);
-      }
-    });
-
-    // downloadInfo api
-    express_app.get('/downloadInfo', (req, res) => {
-      res.json({
-        total_downloaded: torrent.downloaded,
-        total_size: torrent.length,
-        path: torrent.path,
-      });
-    });
-
-    // speed api
-    express_app.get('/speed', (req, res) => {
-      res.json({ up: torrent.uploadSpeed, down: torrent.downloadSpeed });
-    });
-
-    // get Title api
-    express_app.get('/title', (req, res) => {
-      res.json({
-        title:
-          data.title === undefined
-            ? 'YTS-Player'
-            : 'YTS-Player - ' + data.title,
-      });
-    });
-
-    // start server
-    stream_server = express_app.listen(
-      +VIDEO_STREAM_PORT,
-      VIDEO_STREAM_HOST,
-      () => {
-        console.log('server ready');
-        createVideoPlayerWindow();
-      }
-    );
   }
+
+  // if (!videoFile) {
+  //   closeWebTorrentClient(() => {
+  //     console.log('Webtorrent Client destroyed before downloading Movie');
+  //     downloadMovieInstead(data.hash, maxCon, torrent.path);
+  //   });
+  //   return;
+  // } else {
+  //   // host video file
+  //   express_app.get('/video', function (req, res) {
+  //     const fileSize = videoFile.length;
+  //     const range = req.headers.range;
+  //     if (range) {
+  //       const parts = range.replace(/bytes=/, '').split('-');
+  //       const start = parseInt(parts[0], 10);
+  //       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+  //       const contentLength = end - start + 1;
+  //       const stream = videoFile.createReadStream({ start, end });
+  //       const head = {
+  //         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+  //         'Accept-Ranges': 'bytes',
+  //         'Content-Length': contentLength,
+  //         'Content-Type': 'video/mp4',
+  //       };
+  //       res.writeHead(206, head);
+  //       stream.once('error', (err) => {
+  //         console.log(err.toString());
+  //       });
+  //       // pipe readable stream through writable stream (res)
+  //       stream.pipe(res);
+  //     } else {
+  //       const head = {
+  //         'Content-Length': fileSize,
+  //         'Content-Type': 'video/mp4',
+  //       };
+  //       res.writeHead(200, head);
+  //       const stream = videoFile.createReadStream();
+  //       stream.once('error', (err) => {
+  //         console.log(err.toString());
+  //       });
+  //       stream.pipe(res);
+  //     }
+  //   });
+
+  //   // subtitle api
+  //   express_app.get('/subtitleApi/add', (req, res) => {
+  //     try {
+  //       if (req.query.path) {
+  //         const path_query = req.query.path as string;
+  //         const subtitle_path: string[] = path_query.split('.');
+  //         if (subtitle_path[subtitle_path.length - 1] === 'srt') {
+  //           const srtData = fs.readFileSync(path_query);
+  //           const newPath = path.join(torrent.path, '/', 'customCaption.vtt');
+  //           srt2vtt(srtData, function (err: any, vttData: any) {
+  //             if (err) throw new Error(err);
+  //             fs.writeFileSync(newPath, vttData);
+  //             fs.createReadStream(newPath).pipe(res);
+  //           });
+  //         } else if (subtitle_path[subtitle_path.length - 1] === 'vtt') {
+  //           fs.createReadStream(path_query).pipe(res);
+  //         } else {
+  //           throw new Error(
+  //             'Subtitle MIME type not supported. Should be .srt or .vtt'
+  //           );
+  //         }
+  //       } else {
+  //         throw new Error('Subtitle path not found');
+  //       }
+  //     } catch (err: any) {
+  //       dialog.showErrorBox('Error while adding subtitle', err.toString());
+  //       res.sendStatus(400);
+  //     }
+  //   });
+
+  //   // downloadInfo api
+  //   express_app.get('/downloadInfo', (req, res) => {
+  //     res.json({
+  //       total_downloaded: torrent.downloaded,
+  //       total_size: torrent.length,
+  //       path: torrent.path,
+  //     });
+  //   });
+
+  //   // speed api
+  //   express_app.get('/speed', (req, res) => {
+  //     res.json({ up: torrent.uploadSpeed, down: torrent.downloadSpeed });
+  //   });
+
+  //   // get Title api
+  //   express_app.get('/title', (req, res) => {
+  //     res.json({
+  //       title:
+  //         data.title === undefined
+  //           ? 'YTS-Player'
+  //           : 'YTS-Player - ' + data.title,
+  //     });
+  //   });
+
+  //   // start server
+  //   stream_server = express_app.listen(
+  //     +VIDEO_STREAM_PORT,
+  //     VIDEO_STREAM_HOST,
+  //     () => {
+  //       console.log('server ready');
+  //       createVideoPlayerWindow();
+  //     }
+  //   );
+  // }
 
   // if torrent error occurs
   torrent.on('error', function (err) {
     if (webtorrent_client) {
-      webtorrent_client.destroy(() => {
+      closeWebTorrentClient(() => {
         console.log('Client destroyed due torrent error.');
       });
     }
@@ -312,7 +331,7 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
   // if no peers in torrent
   torrent.on('noPeers', function (announceType) {
     if (webtorrent_client) {
-      webtorrent_client.destroy(() => {
+      closeWebTorrentClient(() => {
         console.log('Client destroyed due to no peers or network issue.');
       });
     }
@@ -322,7 +341,7 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
   // error in torrent client
   webtorrent_client.on('error', (err) => {
     if (webtorrent_client) {
-      webtorrent_client.destroy(() => {
+      closeWebTorrentClient(() => {
         console.log('Client destroyed due to Torrent client error.');
         console.log(err.toString());
       });
@@ -332,14 +351,32 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
 });
 
 /* Helper Functions */
-function closeServerAndClient() {
+function closeStreamServer() {
   if (stream_server) {
-    stream_server.close(() => {
-      console.log('server closed');
+    stream_server.close((err) => {
+      console.log('Closing Stream server');
+      stream_server = undefined;
+      if (err) {
+        console.log(err.toString());
+      }
     });
   }
+}
+
+function closeWebTorrentClient(cb?: Function) {
   if (webtorrent_client) {
-    webtorrent_client.destroy(() => {
+    webtorrent_client.destroy((err) => {
+      console.log('Closing WebTorrent Client');
+      webtorrent_client = undefined;
+      if (err) {
+        console.log(err.toString());
+        return;
+      }
+
+      if (cb) {
+        cb();
+        return;
+      }
     });
   }
 }
@@ -351,7 +388,7 @@ function downloadMovieInstead(
 ) {
   // delete previous path
   if (fs.existsSync(previousPath)) {
-    fs.rmdir(previousPath, { recursive: true }, () => {});
+    fs.rm(previousPath, { recursive: true }, () => {});
   }
 
   const downloadOption = dialog.showMessageBoxSync(mainWindow, {
@@ -485,7 +522,9 @@ function createVideoPlayerWindow() {
   }
 
   videoPlayerWindow.on('closed', () => {
-    closeServerAndClient();
+    videoPlayerWindow = undefined;
+    closeStreamServer();
+    closeWebTorrentClient();
   });
 }
 
@@ -498,14 +537,13 @@ function createDownloaderWindow() {
   }
 
   downloaderWindow.on('closed', () => {
-    if (webtorrent_client) {
-      webtorrent_client.destroy(() => {
-        console.log('Client destroyed on window closed');
-        ipcMain.removeAllListeners('download:stop');
-        // ipcMain.removeAllListeners("download:resume")
-        // ipcMain.removeAllListeners("download:pause")
-      });
-    }
+    downloaderWindow = undefined
+    closeWebTorrentClient(() => {
+      console.log('Client destroyed on window closed');
+      ipcMain.removeAllListeners('download:stop');
+      // ipcMain.removeAllListeners("download:resume")
+      // ipcMain.removeAllListeners("download:pause")
+    });
   });
 }
 

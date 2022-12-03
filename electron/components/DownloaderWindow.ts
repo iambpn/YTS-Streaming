@@ -1,4 +1,5 @@
 import { BrowserWindow } from 'electron';
+import isDev from 'electron-is-dev';
 import path from 'path';
 
 export default class DownloaderWindow extends BrowserWindow {
@@ -6,7 +7,7 @@ export default class DownloaderWindow extends BrowserWindow {
     super({
       width: 550,
       height: 220,
-      resizable: false,
+      resizable: isDev,
       darkTheme: true,
       backgroundColor: '#060606',
       title: 'Downloader',
