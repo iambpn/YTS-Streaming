@@ -187,8 +187,7 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
   });
   // hosting files end
 
-  const maxCon = data.maxCon ? Number(data.maxCon) : 55;
-  webtorrent_client = new WebTorrent({ maxConns: maxCon });
+  webtorrent_client = getWebTorrentClient(data.maxCon, data.bandwidthLimit);
 
   const torrent: Torrent = await new Promise((resolve, reject) => {
     webtorrent_client!.add(data.hash, {}, (torrent) => {
@@ -202,121 +201,118 @@ ipcMain.handle('video:play', async (event, data: videoPlayData) => {
     return file.name.endsWith('.mp4');
   });
 
-  if (videoFile) {
+  if (!videoFile) {
     closeWebTorrentClient(() => {
       console.log('Webtorrent Client destroyed before downloading Movie');
-      downloadMovieInstead(data.hash, maxCon, torrent.path);
+      downloadMovieInstead(
+        data.hash,
+        data.maxCon,
+        data.bandwidthLimit,
+        torrent.path
+      );
     });
     return;
+  } else {
+    // host video file
+    express_app.get('/video', function (req, res) {
+      const fileSize = videoFile.length;
+      const range = req.headers.range;
+      if (range) {
+        const parts = range.replace(/bytes=/, '').split('-');
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        const contentLength = end - start + 1;
+        const stream = videoFile.createReadStream({ start, end });
+        const head = {
+          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': contentLength,
+          'Content-Type': 'video/mp4',
+        };
+        res.writeHead(206, head);
+        stream.once('error', (err) => {
+          console.log(err.toString());
+        });
+        // pipe readable stream through writable stream (res)
+        stream.pipe(res);
+      } else {
+        const head = {
+          'Content-Length': fileSize,
+          'Content-Type': 'video/mp4',
+        };
+        res.writeHead(200, head);
+        const stream = videoFile.createReadStream();
+        stream.once('error', (err) => {
+          console.log(err.toString());
+        });
+        stream.pipe(res);
+      }
+    });
+
+    // subtitle api
+    express_app.get('/subtitleApi/add', (req, res) => {
+      try {
+        if (req.query.path) {
+          const path_query = req.query.path as string;
+          const subtitle_path: string[] = path_query.split('.');
+          if (subtitle_path[subtitle_path.length - 1] === 'srt') {
+            const srtData = fs.readFileSync(path_query);
+            const newPath = path.join(torrent.path, '/', 'customCaption.vtt');
+            srt2vtt(srtData, function (err: any, vttData: any) {
+              if (err) throw new Error(err);
+              fs.writeFileSync(newPath, vttData);
+              fs.createReadStream(newPath).pipe(res);
+            });
+          } else if (subtitle_path[subtitle_path.length - 1] === 'vtt') {
+            fs.createReadStream(path_query).pipe(res);
+          } else {
+            throw new Error(
+              'Subtitle MIME type not supported. Should be .srt or .vtt'
+            );
+          }
+        } else {
+          throw new Error('Subtitle path not found');
+        }
+      } catch (err: any) {
+        dialog.showErrorBox('Error while adding subtitle', err.toString());
+        res.sendStatus(400);
+      }
+    });
+
+    // downloadInfo api
+    express_app.get('/downloadInfo', (req, res) => {
+      res.json({
+        total_downloaded: torrent.downloaded,
+        total_size: torrent.length,
+        path: torrent.path,
+      });
+    });
+
+    // speed api
+    express_app.get('/speed', (req, res) => {
+      res.json({ up: torrent.uploadSpeed, down: torrent.downloadSpeed });
+    });
+
+    // get Title api
+    express_app.get('/title', (req, res) => {
+      res.json({
+        title:
+          data.title === undefined
+            ? 'YTS-Player'
+            : 'YTS-Player - ' + data.title,
+      });
+    });
+
+    // start server
+    stream_server = express_app.listen(
+      +VIDEO_STREAM_PORT,
+      VIDEO_STREAM_HOST,
+      () => {
+        console.log('server ready');
+        createVideoPlayerWindow();
+      }
+    );
   }
-
-  // if (!videoFile) {
-  //   closeWebTorrentClient(() => {
-  //     console.log('Webtorrent Client destroyed before downloading Movie');
-  //     downloadMovieInstead(data.hash, maxCon, torrent.path);
-  //   });
-  //   return;
-  // } else {
-  //   // host video file
-  //   express_app.get('/video', function (req, res) {
-  //     const fileSize = videoFile.length;
-  //     const range = req.headers.range;
-  //     if (range) {
-  //       const parts = range.replace(/bytes=/, '').split('-');
-  //       const start = parseInt(parts[0], 10);
-  //       const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
-  //       const contentLength = end - start + 1;
-  //       const stream = videoFile.createReadStream({ start, end });
-  //       const head = {
-  //         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-  //         'Accept-Ranges': 'bytes',
-  //         'Content-Length': contentLength,
-  //         'Content-Type': 'video/mp4',
-  //       };
-  //       res.writeHead(206, head);
-  //       stream.once('error', (err) => {
-  //         console.log(err.toString());
-  //       });
-  //       // pipe readable stream through writable stream (res)
-  //       stream.pipe(res);
-  //     } else {
-  //       const head = {
-  //         'Content-Length': fileSize,
-  //         'Content-Type': 'video/mp4',
-  //       };
-  //       res.writeHead(200, head);
-  //       const stream = videoFile.createReadStream();
-  //       stream.once('error', (err) => {
-  //         console.log(err.toString());
-  //       });
-  //       stream.pipe(res);
-  //     }
-  //   });
-
-  //   // subtitle api
-  //   express_app.get('/subtitleApi/add', (req, res) => {
-  //     try {
-  //       if (req.query.path) {
-  //         const path_query = req.query.path as string;
-  //         const subtitle_path: string[] = path_query.split('.');
-  //         if (subtitle_path[subtitle_path.length - 1] === 'srt') {
-  //           const srtData = fs.readFileSync(path_query);
-  //           const newPath = path.join(torrent.path, '/', 'customCaption.vtt');
-  //           srt2vtt(srtData, function (err: any, vttData: any) {
-  //             if (err) throw new Error(err);
-  //             fs.writeFileSync(newPath, vttData);
-  //             fs.createReadStream(newPath).pipe(res);
-  //           });
-  //         } else if (subtitle_path[subtitle_path.length - 1] === 'vtt') {
-  //           fs.createReadStream(path_query).pipe(res);
-  //         } else {
-  //           throw new Error(
-  //             'Subtitle MIME type not supported. Should be .srt or .vtt'
-  //           );
-  //         }
-  //       } else {
-  //         throw new Error('Subtitle path not found');
-  //       }
-  //     } catch (err: any) {
-  //       dialog.showErrorBox('Error while adding subtitle', err.toString());
-  //       res.sendStatus(400);
-  //     }
-  //   });
-
-  //   // downloadInfo api
-  //   express_app.get('/downloadInfo', (req, res) => {
-  //     res.json({
-  //       total_downloaded: torrent.downloaded,
-  //       total_size: torrent.length,
-  //       path: torrent.path,
-  //     });
-  //   });
-
-  //   // speed api
-  //   express_app.get('/speed', (req, res) => {
-  //     res.json({ up: torrent.uploadSpeed, down: torrent.downloadSpeed });
-  //   });
-
-  //   // get Title api
-  //   express_app.get('/title', (req, res) => {
-  //     res.json({
-  //       title:
-  //         data.title === undefined
-  //           ? 'YTS-Player'
-  //           : 'YTS-Player - ' + data.title,
-  //     });
-  //   });
-
-  //   // start server
-  //   stream_server = express_app.listen(
-  //     +VIDEO_STREAM_PORT,
-  //     VIDEO_STREAM_HOST,
-  //     () => {
-  //       console.log('server ready');
-  //       createVideoPlayerWindow();
-  //     }
-  //   );
-  // }
 
   // if torrent error occurs
   torrent.on('error', function (err) {
@@ -383,7 +379,8 @@ function closeWebTorrentClient(cb?: Function) {
 
 function downloadMovieInstead(
   hash: string,
-  maxCon: number,
+  maxCon: string | null,
+  bandwidthLimit: string | null,
   previousPath: string
 ) {
   // delete previous path
@@ -416,7 +413,7 @@ function downloadMovieInstead(
   }
 
   // only download no need to stream from here
-  webtorrent_client = new WebTorrent({ maxConns: maxCon });
+  webtorrent_client = getWebTorrentClient(maxCon, bandwidthLimit);
   webtorrent_client.add(hash, { path: downloadPath[0] }, (torrent) => {
     createDownloaderWindow();
 
@@ -427,15 +424,25 @@ function downloadMovieInstead(
       }
     });
 
-    // ipcMain.on("download:pause", () => {
-    //     console.log("torrent Paused");
-    //     torrent.pause()
-    // })
-    //
-    // ipcMain.on("download:resume", () => {
-    //     console.log("torrent resumed");
-    //     torrent.resume();
-    // })
+    ipcMain.on('download:pause', () => {
+      console.log('torrent Paused');
+      if (webtorrent_client) {
+        //@ts-expect-error
+        webtorrent_client.throttleDownload(0);
+        //@ts-expect-error
+        webtorrent_client.throttleUpload(0);
+      }
+    });
+
+    ipcMain.on('download:resume', () => {
+      console.log('torrent resumed');
+      if (webtorrent_client) {
+        //@ts-expect-error
+        webtorrent_client.throttleDownload(-1);
+        //@ts-expect-error
+        webtorrent_client.throttleUpload(-1);
+      }
+    });
 
     // every time torrent downloads
     torrent.on('download', (bytes) => {
@@ -481,6 +488,20 @@ function downloadMovieInstead(
   // error in torrent client
   webtorrent_client.on('error', (err) => {
     dialog.showErrorBox('Torrent Client Error', err.toString());
+  });
+}
+
+function getWebTorrentClient(
+  maxCon: string | null,
+  bandwidthLimit: string | null
+): WebTorrent.Instance {
+  let limit =
+    bandwidthLimit && Number(bandwidthLimit) > 0 ? Number(bandwidthLimit) : -1;
+  return new WebTorrent({
+    maxConns: maxCon ? Number(maxCon) : 55,
+    //@ts-expect-error
+    downloadLimit: limit * MB,
+    uploadLimit: limit * MB,
   });
 }
 
@@ -537,12 +558,12 @@ function createDownloaderWindow() {
   }
 
   downloaderWindow.on('closed', () => {
-    downloaderWindow = undefined
+    downloaderWindow = undefined;
     closeWebTorrentClient(() => {
       console.log('Client destroyed on window closed');
       ipcMain.removeAllListeners('download:stop');
-      // ipcMain.removeAllListeners("download:resume")
-      // ipcMain.removeAllListeners("download:pause")
+      ipcMain.removeAllListeners('download:resume');
+      ipcMain.removeAllListeners('download:pause');
     });
   });
 }

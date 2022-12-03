@@ -3,7 +3,6 @@ import BackDrop from '../backdrop/BackDrop';
 import package_json from '../../../package.json';
 import styles from './SettingsModal.module.scss';
 import CustomCaption from './CustomCaption';
-import { type } from 'os';
 
 interface SettingsModalProps {
   openSettings: React.Dispatch<React.SetStateAction<boolean>>;
@@ -22,8 +21,21 @@ function getMaxConSettings(): string | null {
   return localStorage.getItem('MaxCon');
 }
 
+function setMaxConSettings(maxCon: number) {
+  localStorage.setItem('MaxCon', String(maxCon));
+}
+
+function getBandWidthLimit(): string | null {
+  return localStorage.getItem('Bandwidth');
+}
+
+function setBandWidthLimit(speed: number) {
+  localStorage.setItem('Bandwidth', String(speed));
+}
+
 function SettingModal(props: SettingsModalProps) {
   const [maxCon, updateMaxCon] = useState<number>(55);
+  const [bandwidthLimit, updateBandwidthLimit] = useState<number>(-1);
   const [cachedSpaceTitle, updateCachedSpaceTitle] = useState<string>('');
   const [torrentLink, updateTorrentLink] = useState<string>('');
   const [playing, setPlaying] = useState<boolean>(false);
@@ -37,9 +49,14 @@ function SettingModal(props: SettingsModalProps) {
   });
 
   useEffect(() => {
-    const maxCon = localStorage.getItem('MaxCon');
+    const maxCon = getMaxConSettings();
+    const bandwidthLimit = getBandWidthLimit();
     if (maxCon !== null) {
       updateMaxCon(Number(maxCon));
+    }
+
+    if (bandwidthLimit !== null) {
+      updateBandwidthLimit(Number(bandwidthLimit));
     }
 
     // @ts-expect-error ** fetch  caption style data**
@@ -51,16 +68,25 @@ function SettingModal(props: SettingsModalProps) {
   }, []);
 
   const handleMaxConChange = (e: React.FormEvent<HTMLInputElement>) => {
-    if (Number(e.currentTarget.value) === 0) {
+    if (Number(e.currentTarget.value) <= 0) {
       updateMaxCon(55);
     } else {
       updateMaxCon(Number(e.currentTarget.value));
     }
   };
 
+  const handleBandwidthLimitChange = (e: React.FormEvent<HTMLInputElement>) => {
+    if (Number(e.currentTarget.value) <= 0) {
+      updateBandwidthLimit(-1);
+    } else {
+      updateBandwidthLimit(Number(e.currentTarget.value));
+    }
+  };
+
   const handleCloseModal = () => {
     props.openSettings(false);
-    localStorage.setItem('MaxCon', String(maxCon));
+    setMaxConSettings(maxCon);
+    setBandWidthLimit(bandwidthLimit);
 
     // @ts-expect-error
     window.api.send('style:caption', {
@@ -97,6 +123,7 @@ function SettingModal(props: SettingsModalProps) {
       await window.api.invoke('video:play', {
         hash: torrentLink,
         maxCon,
+        bandwidthLimit,
       });
       setPlaying(false);
       handleCloseModal();
@@ -158,6 +185,27 @@ function SettingModal(props: SettingsModalProps) {
                 </div>
               </div>
             </div>
+            <div className="modal-body">
+              <div className="d-flex justify-content-center">
+                <label
+                  htmlFor="speed_limit"
+                  className="col-form-label w-50 text-center"
+                  title={'default = -1'}
+                >
+                  Limit Up/Down Speed (MB)
+                </label>
+                <div style={{ width: '35%' }}>
+                  <input
+                    type="number"
+                    className="form-control"
+                    id="speed_limit"
+                    min={-1}
+                    value={bandwidthLimit}
+                    onChange={handleBandwidthLimitChange}
+                  />
+                </div>
+              </div>
+            </div>
             <div className="modal-body border-top border-secondary">
               <div>
                 <label htmlFor={'magnetLink'}>
@@ -188,7 +236,7 @@ function SettingModal(props: SettingsModalProps) {
                       onClick={handlePlayExternalSrc}
                       xlinkTitle={'Play'}
                     >
-                      <use xlinkHref="asstes/images/play-button.svg#Capa_1"></use>
+                      <use xlinkHref="/assets/images/play-button.svg#Capa_1"></use>
                     </svg>
                   </div>
                 </div>
@@ -290,4 +338,4 @@ function SettingModal(props: SettingsModalProps) {
 }
 
 export default SettingModal;
-export { getMaxConSettings };
+export { getMaxConSettings, getBandWidthLimit };

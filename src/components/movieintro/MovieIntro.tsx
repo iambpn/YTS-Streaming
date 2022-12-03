@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './MovieIntro.scss';
 import { useNavigate } from 'react-router-dom';
-import { getMaxConSettings } from '../header/SettingsModal';
+import { getBandWidthLimit, getMaxConSettings } from '../header/SettingsModal';
 
 interface MovieIntroProps {
   movie: any;
@@ -15,11 +15,13 @@ export default function MovieIntro(props: MovieIntroProps) {
   const handleClickOnLink = async (hash: string) => {
     setPlaying(true);
     const maxCon = getMaxConSettings();
+    const bandwidthLimit = getBandWidthLimit();
     // @ts-expect-error
     await window.api.invoke('video:play', {
       hash,
       title: props.movie.title,
       maxCon,
+      bandwidthLimit,
     });
     setPlaying(false);
   };

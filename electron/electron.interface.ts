@@ -6,4 +6,5 @@ export interface videoPlayData {
   hash: string;
   title?: string;
   maxCon: string | null;
+  bandwidthLimit: string | null;
 }
