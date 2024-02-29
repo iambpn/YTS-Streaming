@@ -51,7 +51,7 @@
     "sass": "^1.56.1",
     "shx": "^0.3.4",
     "typescript": "~4.8.0",
-    "vite": "^3.2.3",
+    "vite": "^3.2.8",
     "vite-plugin-eslint": "^1.8.1"
   },
   "build": {
