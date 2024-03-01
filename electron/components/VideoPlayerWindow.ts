@@ -1,5 +1,6 @@
 import { BrowserWindow, Menu, shell } from 'electron';
 import path from 'path';
+import { get__dirname } from '../configs.js';
 
 class VideoPlayerWindow extends BrowserWindow {
   constructor(url: string) {
@@ -15,7 +16,10 @@ class VideoPlayerWindow extends BrowserWindow {
       webPreferences: {},
       icon:
         process.platform === 'linux'
-          ? path.join(__dirname, '../assets/icons/256x256.png')
+          ? path.join(
+              get__dirname(import.meta.url),
+              '../assets/icons/256x256.png'
+            )
           : undefined,
     });
     this.setMenu(
