@@ -1,6 +1,7 @@
 import { BrowserWindow } from 'electron';
 import isDev from 'electron-is-dev';
 import path from 'path';
+import { get__dirname } from '../configs.js';
 
 export default class DownloaderWindow extends BrowserWindow {
   constructor(url: string) {
@@ -12,12 +13,15 @@ export default class DownloaderWindow extends BrowserWindow {
       backgroundColor: '#060606',
       title: 'Downloader',
       webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
+        preload: path.join(get__dirname(import.meta.url), 'preload.js'),
         backgroundThrottling: false,
       },
       icon:
         process.platform === 'linux'
-          ? path.join(__dirname, '../assets/icons/256x256.png')
+          ? path.join(
+              get__dirname(import.meta.url),
+              '../assets/icons/256x256.png'
+            )
           : undefined,
     });
     this.setMenuBarVisibility(false);

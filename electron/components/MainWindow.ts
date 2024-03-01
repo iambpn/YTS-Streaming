@@ -1,6 +1,7 @@
 import { BrowserWindow } from 'electron';
-import path from 'path';
 import windowStateKeeper from 'electron-window-state';
+import path from 'path';
+import { get__dirname } from '../configs.js';
 
 class MainWindow extends BrowserWindow {
   constructor(url: string, state: windowStateKeeper.State) {
@@ -15,12 +16,12 @@ class MainWindow extends BrowserWindow {
       backgroundColor: '#060606',
       title: 'YTS-Streaming',
       webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
+        preload: path.join(get__dirname(import.meta.url), 'preload.cjs'),
         backgroundThrottling: false,
       },
       icon:
         process.platform === 'linux'
-          ? path.join(__dirname, '../assets/icons/256x256.png')
+          ? path.join(get__dirname(import.meta.url), '../assets/icons/256x256.png')
           : undefined,
     });
     this.loadURL(url);
