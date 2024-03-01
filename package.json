@@ -1,6 +1,6 @@
 {
   "name": "yts-streaming",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "private": true,
   "type": "module",
   "main": "build/electron.js",
@@ -70,7 +70,7 @@
     },
     "asar": true,
     "appId": "com.mbpn1.yts-streaming",
-    "copyright": "Copyright 2022 Maharjan-Bipin",
+    "copyright": "Copyright 2024 Maharjan-Bipin",
     "compression": "normal",
     "win": {
       "target": "nsis"
@@ -88,5 +88,8 @@
       "include": "builder_assets/installerMacro.nsh",
       "warningsAsErrors": false
     }
+  },
+  "volta": {
+    "node": "18.19.1"
   }
 }
